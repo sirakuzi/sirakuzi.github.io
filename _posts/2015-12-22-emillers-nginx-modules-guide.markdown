@@ -1,7 +1,7 @@
 ---
 title: "Руководство Эмиллера по разработке модулей для Nginx"
 description: "Первая попытка перевести это эпическое произведение."
-categories: [общее]
+categories: [posts]
 layout: post
 time: 02:38:35
 ---
@@ -16,7 +16,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <small>Оригинал <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>, черновик от 14 июля 2008 г. (<a href="http://www.evanmiller.org/nginx-modules-guide.html#changes">изменения</a>).
-Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>, перевод <a href="/">Петра Леонова</a>.</small>
+Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>, перевод <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.</small>
 </section>
 
 <section>
