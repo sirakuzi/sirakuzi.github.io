@@ -17,8 +17,8 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <section>
 <small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
-<br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
-<br>Впервые опубликован: 28 апреля 2007 г. (Последнее изменение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
+<br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> на основе перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a> черновика от 14 июля 2008 г.
+<br>Первая публикация: 28 апреля 2007 г. (Последнее изменение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
 <section>
@@ -300,31 +300,30 @@ struct ngx_command_t {
 
 <p>Откуда эти встроенные функции знают куда сохранять данные? В этом им помогают следующие два поля структуры <code>ngx_command_t</code>: <code>conf</code> и <code>offset</code>. Поле <code>conf</code> указывае Nginx'у куда сохранить данные: в главную, серверную или конфигурационную структуру локешна (задается с помощью <code>NGX_HTTP_MAIN_CONF_OFFSET</code>, <code>NGX_HTTP_SRV_CONF_OFFSET</code>, или <code>NGX_HTTP_LOC_CONF_OFFSET</code>). Поле <code>offset</code> указывает в какую часть структуры записать значение.</p>
 
-<p>И,<em>наконец</em>, поле <code>post</code> это указатель на еще одну штуку, которая может потребоваться модулю на этапе чтения конфигурации. Чаще всего равна <code>NULL</code>.</p>
+<p>И, <em>наконец</em>, поле <code>post</code> это указатель на еще одну штуку, которая может потребоваться модулю на этапе чтения конфигурации. Чаще всего равна <code>NULL</code>.</p>
 
 <p>Набор директив должен заканчиваться полем <code>ngx_null_command</code>.</p>
 
-
-
 <a name="context"></a>
-<h3>2.3. The Module Context</h3>
+<h3>2.3. Контекст Модуля</h3>
 
-<p>This is a static <code>ngx_http_module_t</code> struct, which just has a bunch of function references for creating the three configurations and merging them together. Its name is <code>ngx_http_&lt;module name&gt;_module_ctx</code>. In order, the function references are:</p>
+<p>Это статическая структура типа <code>ngx_http_module_t</code>, в которой определяются несколько указателей на функции для создания трех конфигураций и слияния их вместе. Называют ее <code>ngx_http_&lt;имя_модуля&gt;_module_ctx</code>. Вот назначение этих функций по порядку:</p>
 
 <ul>
-<li>preconfiguration</li>
-<li>postconfiguration</li>
-<li>creating the main conf (i.e., do a malloc and set defaults)</li>
-<li>initializing the main conf (i.e., override the defaults with what's in nginx.conf)</li>
-<li>creating the server conf</li>
-<li>merging it with the main conf</li>
-<li>creating the location conf</li>
-<li>merging it with the server conf</li>
+    <li>преконфигурация</li>
+    <li>постконфигурация</li>
+    <li>создание главной конфигурации (выделение памяти и задание значений по умолчанию)</li>
+    <li>инициализация главной конфигурации (переопределение данных на взятые из nginx.conf)</li>
+    <li>создание конфигурации сервера</li>
+    <li>слияние ее с главной конфигурацией</li>
+    <li>создание конфигурации локейшна</li>
+    <li>слияние ее с конфигурацией сервера</li>
 </ul>
 
-<p>These take different arguments depending on what they're doing. Here's the struct definition, taken from <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_config.h#L22" class="source">http/ngx_http_config.h</a>, so you can see the different function signatures of the callbacks:</p>
+<p>Функции принимают разные аргументы в зависимости от своего назначения. Вот описание этой структуры, взятое из <a class="source" href="http://lxr.evanmiller.org/http/source/http/ngx_http_config.h#L22">http/ngx_http_config.h</a>, в котором видны разные сигнатуры функций-колбеков:</p>
 
-<code><pre>
+<code>
+<pre><code class="cpp">
 typedef struct {
     ngx_int_t   (*preconfiguration)(ngx_conf_t *cf);
     ngx_int_t   (*postconfiguration)(ngx_conf_t *cf);
@@ -338,31 +337,32 @@ typedef struct {
     void       *(*create_loc_conf)(ngx_conf_t *cf);
     char       *(*merge_loc_conf)(ngx_conf_t *cf, void *prev, void *conf);
 } ngx_http_module_t;
-</pre></code>
+</code></pre>
+</code>
 
-<p>You can set functions you don't need to <code>NULL</code>, and Nginx will figure it out.</p>
+<p>Указатели на те функции, которые вам не пригодятся, можете заполнить <code>NULL</code>, Nginx поймет такую запись.</p>
 
-<p>Most handlers just use the last two: a function to allocate memory for location-specific configuration (called <code>ngx_http_&lt;module name&gt;_create_loc_conf</code>), and a function to set defaults and merge this configuration with any inherited configuration (called <code>ngx_http_&lt;module name &gt;_merge_loc_conf</code>). The merge function is also responsible for producing an error if the configuration is invalid; these errors halt server startup.</p>
+<p>Большинство обработчиков используют только две последние: функцию для выделения памяти под структуру конфигурации локейшна (именуемая <code>ngx_http_&lt;имя_модуля&gt;_create_loc_conf</code>), и функцию устанавливающую значения по умолчанию и слияние этой конфигурации с любой унаследованной конфигурацией (именуемая <code>ngx_http_&lt;имя_модуля&gt;_merge_loc_conf</code>). Функция, объединяющая конфиги, также может вернуть ошибку невалидной конфигурации, что остановит загрузку сервера.</p>
 
-<p>Here's an example module context struct:</p>
+<p>Вот пример структуры контекста модуля:</p>
 
-<code><pre>
+<pre><code class="cpp">
 static ngx_http_module_t  ngx_http_circle_gif_module_ctx = {
-    NULL,                          /* preconfiguration */
-    NULL,                          /* postconfiguration */
+    NULL,                          /* преконфигурация */
+    NULL,                          /* постконфигурация */
 
-    NULL,                          /* create main configuration */
-    NULL,                          /* init main configuration */
+    NULL,                          /* создание главной конфигурации */
+    NULL,                          /* инициализация главной конфигурации */
 
-    NULL,                          /* create server configuration */
-    NULL,                          /* merge server configuration */
+    NULL,                          /* создание конфигурации сервера */
+    NULL,                          /* слияние конфигурации сервера */
 
-    ngx_http_circle_gif_create_loc_conf,  /* create location configuration */
-    ngx_http_circle_gif_merge_loc_conf /* merge location configuration */
+    ngx_http_circle_gif_create_loc_conf,  /* создание конфигурации локейшна */
+    ngx_http_circle_gif_merge_loc_conf /* слияние конфигурации локейшна */
 };
-</pre></code>
+</code></pre>
 
-<p>Time to dig in deep a little bit. These configuration callbacks look quite similar across all modules and use the same parts of the Nginx API, so they're worth knowing about.</p>
+<p>Пришло время разобраться со всем этим подробнее. Эти конфигурационные колбеки очень похожи во всех модулях и используют одни и те же части Nginx API, так что их надо хорошо знать.</p>
 
 <a name="create_loc_conf"></a>
 <h4>2.3.1. create_loc_conf</h4>
