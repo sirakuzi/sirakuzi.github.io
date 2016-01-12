@@ -58,7 +58,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 
 <section>
-<h1>Содержание</h1>
+<h>Содержание</h>
 <ol start="0">
     <li><a href="#prerequisites">Предварительные требования</a></li>
     <li><a href="#overview">Устройство Модулей в первом приближении</a></li>
@@ -112,72 +112,78 @@ div.figure img { display: block; margin: 0 auto 1em; }
     <li><a href="#code">Code References</a></li>
 </ol>
 
+<br>
 <section>
 <a name="prerequisites"></a>
-<h1>0. Предварительные требования</h1>
+<h>0. Предварительные требования</h>
 <p>Вы должны неплохо знать Си. Не просто его синтаксис, а то, как работать со структурами и не бояться указателей и ссылок на функции. А также иметь представление о препроцессоре и макросах. Если вам надо немного освежить знания, то ничто не сможет сравниться с <a href="https://ru.wikipedia.org/wiki/Язык_программирования_Си_(книга)">K&amp;R</a>.</p>
 
 <p>Полезно понимать основы HTTP. Мы же, вообще-то, собираемся работать с web-сервером.</p>
 
-<p>Пригодятся знания структуры конфигурационного файла Nginx'а. Вот основные моменты: существуют четыре <em>контекста</em> (называеются они <em>main</em> — главный, <em>server</em> — сервер, <em>upstream</em> — апстрим, и <em>location</em> — локейшн) в которых могут быть директивы с одним и более параметрами. Директивы в главном контексте применяются ко всему-всему; директивы из котекста сервера применяются к конкретному хосту/порту; директивы в апстриме описывают набор бэкендов; а директивы в контексте локешна применяются к разным путям запроса (например, "/", "/images" и т.д.) Локешн наследует конфигурацию содержащему его серверному контексту, а сервер наследует главному контексту. Контекст апстрима не наследует никому, у него собственные директивы, которых больше нигде не используются. Я буду иногда упоминать эти четыре контекста, так что… не забывайте про них.</p>
+<p>Пригодятся знания структуры конфигурационного файла Nginx'а. Вот основные моменты: существуют четыре <em>контекста</em> (называеются они <em>main</em> — главный, <em>server</em> — сервер, <em>upstream</em> — апстрим, и <em>location</em> — локейшн) в которых могут быть директивы с одним и более параметрами. Директивы в главном контексте применяются ко всему-всему; директивы из котекста сервера применяются к конкретному хосту/порту; директивы в апстриме описывают набор бэкендов; а директивы в контексте локейшна применяются к разным путям запроса (например, "/", "/images" и т.д.) Локешн наследует конфигурацию содержащему его серверному контексту, а сервер наследует главному контексту. Контекст апстрима не наследует никому, у него собственные директивы, которых больше нигде не используются. Я буду иногда упоминать эти четыре контекста, так что… не забывайте про них.</p>
 
 <p>Ну что же, начнем!</p>
 
 <section>
 <a name="overview"></a>
-<h1>1. Устройство Модулей в первом приближении</h1>
+<h>1. Устройство Модулей в первом приближении</h>
 
-<p>Nginx modules have three roles we'll cover:</p>
+У модулей Nginx'a могут быть три роли, которые мы рассмотрим:
 <ul>
-    <li><em>handlers</em> process a request and produce output</li>
-    <li><em>filters</em> manipulate the output produced by a handler</li>
-    <li><em>load-balancers</em> choose a backend server to send a request to, when more than one backend server is eligible</li>
+    <li><em>обработчики</em> обрабатывают запрос и генерируют данные ответа</li>
+    <li><em>фильтры</em> обрабатывают данные, полученные от обработчика</li>
+    <li><em>балансировщики</em> выбирают бэкенд, которому передать запрос, если определено несколько бэкендов</li>
 </ul>
 
-<p>Modules do all of the "real work" that you might associate with a web server: whenever Nginx serves a file or proxies a request to another server, there's a handler module doing the work; when Nginx gzips the output or executes a server-side include, it's using filter modules. The "core" of Nginx simply takes care of all the network and application protocols and sets up the sequence of modules that are eligible to process a request. The de-centralized architecture makes it possible for *you* to make a nice self-contained unit that does something you want.</p>
+<p>Модули делают реальную работу, которую обычно делают web-серверы: когда Nginx отправляет файл или проксирует запрос к другому серверу, то это делает модуль-обработчик. Когда Nginx гзипит данные или обрабатывает SSI-директивы, он делает это с помощью модуля-фильтра. Ядро Nginx'а берет на себя работу с сетью и реализацию протоколов, а также запускает модули, которые необходимы для обработки запроса. Децентрализованная архитектура позволяет нам создавать отдельные компоненты, которые делают что-то, что нам нужно.</p>
 
-<p>Note: Unlike modules in Apache, Nginx modules are <em>not</em> dynamically linked. (In other words, they're compiled right into the Nginx binary.)</p>
+<p>Замечание: в отличие от модулей Apache, модули Nginx'а <em>не</em> подгружаются динамически (другими словами, модули вкомпилированы прямо в бинарник Nginx'а).</p>
 
-<p>How does a module get invoked? Typically, at server startup, each handler gets a chance to attach itself to particular locations defined in the configuration; if more than one handler attaches to a particular location, only one will "win" (but a good config writer won't let a conflict happen). Handlers can return in three ways: all is good, there was an error, or it can decline to process the request and defer to the default handler (typically something that serves static files).</p>
+<p>Как же тогда модули задействуются? Обычно, на стадии загрузки сервера каждый обработчик получает шанс прикрепиться к каким-либо локейшнам из конфигурационного файла. Если несколько обработчиков попробуют занять один локейшн, то победит только один (в хорошем конфиге такого не произойдет). Обработчик может завершиться с тремя результатами: все хорошо, произошла ошибка, или он может отказаться от обработки локейшна в пользу обработка по умолчанию (обычно, это выдача статических файлов).</p>
 
-<p>If the handler happens to be a reverse proxy to some set of backend servers, there is room for another type of module: the load-balancer. A load-balancer takes a request and a set of backend servers and decides which server will get the request. Nginx ships with two load-balancing modules: round-robin, which deals out requests like cards at the start of a poker game, and the "IP hash" method, which ensures that a particular client will hit the same backend server across multiple requests.</p>
+<p>Если обработчик является реверс-прокси для несколькоих бэкэнд серверов, то ему понадобится помощь модуля другого типа: балансировщика нагрузки. Балансировщик получает запрос вместе с набором бэкенд серверов и принимает решение, какому серверу передать запрос. Nginx поставлется с двумя модулями балансировки: round-robin, который выбирает серверы по очереди (как при раздаче карт в покере), и модуль с методом хеширования IP адреса, который гарантирует, что запрос конкретного клиента каждый раз будет передаваться одному и тому же бэкенду.</p>
 
-<p>If the handler does not produce an error, the filters are called. Multiple filters can hook into each location, so that (for example) a response can be compressed and then chunked. The order of their execution is determined at compile-time. Filters have the classic "CHAIN OF RESPONSIBILITY" design pattern: one filter is called, does its work, and then calls the next filter, until the final filter is called, and Nginx finishes up the response.</p>
+<p>Если обработчик не вернул ошибку, управление перейдет к фильтрам. Один локейшн могут обрабатывать несколько модулей-фильтров, так, например, ответ может быть сжат, а потом выдаваться chunk'ами. Порядок запуска фильтров определяется на этапе компиляции. Фильры используют классический паттерн «<a href="http://ru.wikipedia.org/wiki/Chain_of_Responsibility">цепочка обязанностей</a>»: запускается один фильтр, делает свою работу, потом запускается второй, и так далее, пока не выполнится последний фильтр, и Nginx завершит обработку запроса.</p>
 
-<p>The really cool part about the filter chain is that each filter doesn't wait for the previous filter to finish; it can process the previous filter's output as it's being produced, sort of like the Unix pipeline. Filters operate on <em>buffers</em>, which are usually the size of a page (4K), although you can change this in your nginx.conf. This means, for example, a module can start compressing the response from a backend server and stream it to the client before the module has received the entire response from the backend. Nice!</p>
+<p>Самая вкусная особенность цепочки фильтров заключается в том, что один фильтр не должен ждать, пока другой завершит свою работу целиком. Можно начать обрабатывать результат работы предыдущего фильтра по мере поступления, по типу потоков (пайпов) в Юниксе. Фильры оперируют <em>буферами</em>, размер которых, обычно, равен размеру страницы (4 Кб), но размер всегда можно задать в nginx.conf. Это означает, например, то, что что модуль может начать сжимать ответ и отправлять его клиенту еще до того, как модуль получит весь ответ от бэкенда целиком. Чудесно!</p>
 
-<p>So to wrap up the conceptual overview, the typical processing cycle goes:</p>
+Чтобы увидеть картину в целом, рассмотрим типичный цикл обработки запроса:
+<ol>
+    <li>Клиент посылает HTTP-запрос;</li>
+    <li>Nginx выбирает подходящий обработчик на основе конфигурации локейшна;</li>
+    <li>Балансировщик (если необходимо) выбирет бэкенд сервер;</li>
+    <li>Обработчик делает свое дело и передает каждый буфер с данными результата первому фильтру;</li>
+    <li>Первый фильтр передает результаты второму фильтру;</li>
+    <li>Второй — третьему, третий — четвертому, и так далее;</li>
+    <li>Получившийся ответ отправляется клиенту.</li>
+</ol>
 
-<div class="figure">
-Client sends HTTP request &rarr; Nginx chooses the appropriate handler based on the location config  &rarr; (if applicable) load-balancer picks a backend server &rarr; Handler does its thing and passes each output buffer to the first filter &rarr; First filter passes the output to the second filter &rarr; second to third &rarr; third to fourth &rarr; etc. &rarr; Final response sent to client
-</div>
-
-<p>I say "typically" because Nginx's module invocation is <em>extremely</em> customizable. It places a big burden on module writers to define exactly how and when the module should run (I happen to think too big a burden). Invocation is actually performed through a series of callbacks, and there are a lot of them. Namely, you can provide a function to be executed:</p>
-
+Я сказал «типичный» цикл потому, что обработку в Nginx'е можно настраивать <em>как угодно</em>. Определить когда и как должен запускать модуль может оказаться непростой задачей для разработчика (я бы сказал очень даже не простой задачей). Настройка модуля проходит в следствии вызова ряда колбеков, и их не так уж мало. Конкретно, можно определить функцию, которая будет запущена:
 <ul>
-<li>Just before the server reads the config file</li>
-<li>For every configuration directive for the location and server for which it appears;</li>
-<li>When Nginx initializes the main configuration</li>
-<li>When Nginx initializes the server (i.e., host/port) configuration</li>
-<li>When Nginx merges the server configuration with the main configuration</li>
-<li>When Nginx initializes the location configuration</li>
-<li>When Nginx merges the location configuration with its parent server configuration</li>
-<li>When Nginx's master process starts</li>
-<li>When a new worker process starts</li>
-<li>When a worker process exits</li>
-<li>When the master exits</li>
-<li>Handling a request</li>
-<li>Filtering response headers</li>
-<li>Filtering the response body</li>
-<li>Picking a backend server</li>
-<li>Initiating a request to a backend server</li>
-<li><em>Re</em>-initiating a request to a backend server</li>
-<li>Processing the response from a backend server</li>
-<li>Finishing an interaction with a backend server</li>
+    <li>Прямо перед чтением конфигурационного файла</li>
+    <li>Для каждой директивы конфигурации локейшна или сервера для которых она предоставляется</li>
+    <li>Когда Nginx инициализирует главную конфигурацию</li>
+    <li>Когда Nginx инициализирует конфигурацию сервера (хост/порт)</li>
+    <li>Когда Nginx мерджит конфигурацию сервера с главной конфигурацией</li>
+    <li>Когда Nginx инициализирует конфигурацию локешна</li>
+    <li>Когда Nginx мерджит конфигурацией сервера с вложенной конфигурацией локешна</li>
+    <li>Когда запускается главный процесс Nginx'а</li>
+    <li>Когда запускается новый рабочий процесс</li>
+    <li>Когда рабочий процесс завершается</li>
+    <li>Когда главный процесс завершается</li>
+    <li>При обработке запроса</li>
+    <li>При Фильтрации заголовка ответа</li>
+    <li>При Фильтрации тела ответа</li>
+    <li>При выборе бэкенд сервера</li>
+    <li>В момент инициализации запроса к бэкенд серверу</li>
+    <li>В момент <em>пере</em>инициализации запроса к бэкенд серверу</li>
+    <li>В момент обработки ответа от бэкенд сервера</li>
+    <li>В момент завершения работы с бэкенд сервером</li>
 </ul>
 
-<p>Holy mackerel! It's a bit overwhelming. You've got a lot of power at your disposal, but you can still do something useful using only a couple of these hooks and a couple of corresponding functions. Time to dive into some modules.</p>
+<p>Подумать только! Это может смутить. В вашем распоряжении большая мощь, но можно начать делать что-то полезное, используя всего несколько хуков и соответсвующих функций. Время погрузиться в модули Nginx'а.</p>
 
+<section>
 <a name="components"></a>
 <h2>2. Components of an Nginx Module</h2>
 
