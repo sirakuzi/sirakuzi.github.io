@@ -16,7 +16,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <small>Оригинал <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
-Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>, перевод <a href="http://sirakuzi.github.io/">Сидорова Александра</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.</small>
+Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>, перевод <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.</small>
 <p>Впервые опубликован: 28 апреля 2007 г. (Последние измнеения от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p>
 </section>
 
