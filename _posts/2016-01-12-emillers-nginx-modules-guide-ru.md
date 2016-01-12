@@ -18,7 +18,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
 <br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
-<br>Впервые опубликован: 28 апреля 2007 г. (Последнее измнеение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
+<br>Впервые опубликован: 28 апреля 2007 г. (Последнее изменение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
 <section>
@@ -112,7 +112,6 @@ div.figure img { display: block; margin: 0 auto 1em; }
     <li><a href="#code">Code References</a></li>
 </ol>
 
-<br>
 <section>
 <a name="prerequisites"></a>
 <h2>0. Предварительные требования</h2>
@@ -128,7 +127,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <a name="overview"></a>
 <h2>1. Устройство Модулей в первом приближении</h2>
 
-У модулей Nginx'a могут быть три роли, которые мы рассмотрим:
+<p>У модулей Nginx'a могут быть три роли, которые мы рассмотрим:</p>
 <ul>
     <li><em>обработчики</em> обрабатывают запрос и генерируют данные ответа</li>
     <li><em>фильтры</em> обрабатывают данные, полученные от обработчика</li>
@@ -147,7 +146,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <p>Самая вкусная особенность цепочки фильтров заключается в том, что один фильтр не должен ждать, пока другой завершит свою работу целиком. Можно начать обрабатывать результат работы предыдущего фильтра по мере поступления, по типу потоков (пайпов) в Юниксе. Фильры оперируют <em>буферами</em>, размер которых, обычно, равен размеру страницы (4 Кб), но размер всегда можно задать в nginx.conf. Это означает, например, то, что что модуль может начать сжимать ответ и отправлять его клиенту еще до того, как модуль получит весь ответ от бэкенда целиком. Чудесно!</p>
 
-Чтобы увидеть картину в целом, рассмотрим типичный цикл обработки запроса:
+<p>Чтобы увидеть картину в целом, рассмотрим типичный цикл обработки запроса:</p>
 <ol>
     <li>Клиент посылает HTTP-запрос;</li>
     <li>Nginx выбирает подходящий обработчик на основе конфигурации локейшна;</li>
@@ -158,7 +157,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
     <li>Получившийся ответ отправляется клиенту.</li>
 </ol>
 
-Я сказал «типичный» цикл потому, что обработку в Nginx'е можно настраивать <em>как угодно</em>. Определить когда и как должен запускать модуль может оказаться непростой задачей для разработчика (я бы сказал очень даже не простой задачей). Настройка модуля проходит в следствии вызова ряда колбеков, и их не так уж мало. Конкретно, можно определить функцию, которая будет запущена:
+<p>Я сказал «типичный» цикл потому, что обработку в Nginx'е можно настраивать <em>как угодно</em>. Определить когда и как должен запускать модуль может оказаться непростой задачей для разработчика (я бы сказал очень даже не простой задачей). Настройка модуля проходит в следствии вызова ряда колбеков, и их не так уж мало. Конкретно, можно определить функцию, которая будет запущена:</p>
 <ul>
     <li>Прямо перед чтением конфигурационного файла</li>
     <li>Для каждой директивы конфигурации локейшна или сервера в которой она появляется</li>
@@ -192,7 +191,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <a name="configuration-structs"></a>
 <h3>2.1. Структуры конфигурации Модуля</h3>
 
-Модули могут определить до трех конфигурационных структур, по одной для главного контекста, контекста сервера и контекста локейшна. Большинству модулей достаточно конфигурации локейшна. Для этих структур принято такое соглашение о наименовании: <code>ngx_http_&lt;название_модуля&gt;_(main|srv|loc)_conf_t</code>. Вот пример, взятый из модуля dav:
+<p>Модули могут определить до трех конфигурационных структур, по одной для главного контекста, контекста сервера и контекста локейшна. Большинству модулей достаточно конфигурации локейшна. Для этих структур принято такое соглашение о наименовании: <code>ngx_http_&lt;название_модуля&gt;_(main|srv|loc)_conf_t</code>. Вот пример, взятый из модуля dav:</p>
 <code>
 <pre><code class="cpp">
 typedef struct {
@@ -205,14 +204,15 @@ typedef struct {
 
 <p>Заметьте, что в Nginx'е используются специальные типы данных (<code>ngx_uint_t</code> и <code>ngx_flag_t</code>). Это просто алиасы для простых типов данных, которые мы все знаем и любим (см. <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_config.h#L79">core/ngx_config.h</a>, если есть сомнения).</p>
 
-Элементы конфигурационной структуры заполняются директивами модуля.
+<p>Элементы конфигурационной структуры заполняются директивами модуля.</p>
 
 <a name="directives"></a>
-<h3>2.2. Module Directives</h3>
+<h3>2.2. Директивы Модуля</h3>
 
-<p>A module's directives appear in a static array of <code>ngx_command_t</code>s. Here's an example of how they're declared, taken from a small module I wrote:</p>
+<p>Директивы модуля описыватся в статическом массиве элементов типа <code>ngx_command_t</code>. Вот пример того, как их определять взятый из маленького модуля, который я <em>(прим. перев. речь об Эване Миллере)</em> написал:</p>
 
-<code><pre>
+<code>
+<pre><code class="cpp">
 static ngx_command_t  ngx_http_circle_gif_commands[] = {
     { ngx_string("circle_gif"),
       NGX_HTTP_LOC_CONF|NGX_CONF_NOARGS,
@@ -230,11 +230,14 @@ static ngx_command_t  ngx_http_circle_gif_commands[] = {
       ...
       ngx_null_command
 };
-</pre></code>
+</code></pre>
+</code>
 
-<p>And here is the declaration of <code>ngx_command_t</code> (the struct we're declaring), found in <a href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L77" class="source">core/ngx_conf_file.h</a>:</p>
 
-<code><pre>
+<p>А вот определение структуры <code>ngx_command_t</code> (той, что мы сейчас заполняем), оно взято из файла <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L77">core/ngx_conf_file.h</a>:</p>
+
+<code>
+<pre><code class="cpp">
 struct ngx_command_t {
     ngx_str_t             name;
     ngx_uint_t            type;
@@ -243,34 +246,38 @@ struct ngx_command_t {
     ngx_uint_t            offset;
     void                 *post;
 };
-</pre></code>
+</code></pre>
+</code>
 
-<p>It seems like a bit much, but each element has a purpose.</p>
 
-<p>The <code>name</code> is the directive string, no spaces. The data type is an <code>ngx_str_t</code>, which is usually instantiated with just (e.g.) <code>ngx_str("proxy_pass")</code>. Note: an <code>ngx_str_t</code> is a struct with a <code>data</code> element, which is a string, and a <code>len</code> element, which is the length of that string. Nginx uses this data structure most places you'd expect a string.</p>
+<p>На первый взгляд кажется что это больше, чем нужно, но у каждого поля свое назначение.</p>
 
-<p><code>type</code> is a set of flags that indicate where the directive is legal and how many arguments the directive takes. Applicable flags, which are bitwise-OR'd, are:</p>
+<p>В поле <code>name</code> хранится имя директивы, задается без пробелов. Используется тип <code>ngx_str_t</code>, значение которого чаще всего создаются с помощью макроса <code>ngx_str("proxy_pass")</code>. Замечание: структура <code>ngx_str_t</code> состоит из поля <code>data</code>, которое содержит саму строку, и поля <code>len</code>, в котором хранится длина строки. В большинстве случаев Nginx использует эту структуру взамен обычных строк.</p>
+
+<p>Значение поля <code>type</code> задается с помощью набора флагов, которые определяют, где можно использовать эту директиву, и сколько она принимает параметров. Значение получается с помощью бинарного «ИЛИ»:</p>
 
 <ul>
-    <li><code>NGX_HTTP_MAIN_CONF</code>: directive is valid in the main config
-    <li><code>NGX_HTTP_SRV_CONF</code>: directive is valid in the server (host) config
-    <li><code>NGX_HTTP_LOC_CONF</code>: directive is valid in a location config
-    <li><code>NGX_HTTP_UPS_CONF</code>: directive is valid in an upstream config
+    <li><code>NGX_HTTP_MAIN_CONF</code>: разрешает использовать директиву в главном контексте</li>
+    <li><code>NGX_HTTP_SRV_CONF</code>: в контексте сервера (хоста)</li>
+    <li><code>NGX_HTTP_LOC_CONF</code>: в контексте локешна</li>
+    <li><code>NGX_HTTP_UPS_CONF</code>: в контексте апстрима</li>
 </ul>
 
 <ul>
-    <li><code>NGX_CONF_NOARGS</code>: directive can take 0 arguments
-    <li><code>NGX_CONF_TAKE1</code>: directive can take exactly 1 argument
-    <li><code>NGX_CONF_TAKE2</code>: directive can take exactly 2 arguments
-    <li>&hellip;
-    <li><code>NGX_CONF_TAKE7</code>: directive can take exactly 7 arguments
+    <li><code>NGX_CONF_NOARGS</code>: сообщает, что директива не принимает аргументы</li>
+    <li><code>NGX_CONF_TAKE1</code>: принимает ровно 1 аргументы</li>
+    <li><code>NGX_CONF_TAKE2</code>: принимает ровно 2 аргумента</li>
+    <li>…</li>
+    <li><code>NGX_CONF_TAKE7</code>: принимает ровно 7 аргументов</li>
 </ul>
 
 <ul>
-<li><code>NGX_CONF_FLAG</code>: directive takes a boolean ("on" or "off")
-<li><code>NGX_CONF_1MORE</code>: directive must be passed at least one argument
-<li><code>NGX_CONF_2MORE</code>: directive must be passed at least two arguments
+    <li><code>NGX_CONF_FLAG</code>: директива принимает булево значение ("on" или "off")</li>
+    <li><code>NGX_CONF_1MORE</code>: директиве принимает 1 или более аргументов</li>
+    <li><code>NGX_CONF_2MORE</code>: директиве принимает 2 или более аргументов</li>
 </ul>
+
+
 
 <p>There are a few other options, too, see <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L1">core/ngx_conf_file.h</a>.</p>
 
