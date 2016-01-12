@@ -70,7 +70,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
         <ol>
             <li><a href="#create_loc_conf">create_loc_conf</a></li>
             <li><a href="#merge_loc_conf">merge_loc_conf</a></li>
-        </ol>
+        </ol></li>
         <li><a href="#definition">Описание Модуля</a></li>
         <li><a href="#installation">Установка Модуля</a></li>
     </ol></li>
@@ -114,7 +114,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <a name="prerequisites"></a>
-<h2>0. Предварительные требования</h2>
+<h1>0. Предварительные требования</h1>
 <p>Вы должны неплохо знать Си. Не просто его синтаксис, а то, как работать со структурами и не бояться указателей и ссылок на функции. А также иметь представление о препроцессоре и макросах. Если вам надо немного освежить знания, то ничто не сможет сравниться с <a href="https://ru.wikipedia.org/wiki/Язык_программирования_Си_(книга)">K&amp;R</a>.</p>
 
 <p>Полезно понимать основы HTTP. Мы же, вообще-то, собираемся работать с web-сервером.</p>
@@ -125,7 +125,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <a name="overview"></a>
-<h2>1. Устройство Модулей в первом приближении</h2>
+<h1>1. Устройство Модулей в первом приближении</h1>
 
 <p>Nginx modules have three roles we'll cover:</p>
 <ul>
