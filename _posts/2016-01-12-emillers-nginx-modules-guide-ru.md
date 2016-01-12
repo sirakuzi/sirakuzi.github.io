@@ -115,7 +115,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <br>
 <section>
 <a name="prerequisites"></a>
-<h>0. Предварительные требования</h>
+<h2>0. Предварительные требования</h2>
 <p>Вы должны неплохо знать Си. Не просто его синтаксис, а то, как работать со структурами и не бояться указателей и ссылок на функции. А также иметь представление о препроцессоре и макросах. Если вам надо немного освежить знания, то ничто не сможет сравниться с <a href="https://ru.wikipedia.org/wiki/Язык_программирования_Си_(книга)">K&amp;R</a>.</p>
 
 <p>Полезно понимать основы HTTP. Мы же, вообще-то, собираемся работать с web-сервером.</p>
@@ -126,7 +126,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <a name="overview"></a>
-<h>1. Устройство Модулей в первом приближении</h>
+<h2>1. Устройство Модулей в первом приближении</h2>
 
 У модулей Nginx'a могут быть три роли, которые мы рассмотрим:
 <ul>
@@ -161,12 +161,12 @@ div.figure img { display: block; margin: 0 auto 1em; }
 Я сказал «типичный» цикл потому, что обработку в Nginx'е можно настраивать <em>как угодно</em>. Определить когда и как должен запускать модуль может оказаться непростой задачей для разработчика (я бы сказал очень даже не простой задачей). Настройка модуля проходит в следствии вызова ряда колбеков, и их не так уж мало. Конкретно, можно определить функцию, которая будет запущена:
 <ul>
     <li>Прямо перед чтением конфигурационного файла</li>
-    <li>Для каждой директивы конфигурации локейшна или сервера для которых она предоставляется</li>
+    <li>Для каждой директивы конфигурации локейшна или сервера в которой она появляется</li>
     <li>Когда Nginx инициализирует главную конфигурацию</li>
     <li>Когда Nginx инициализирует конфигурацию сервера (хост/порт)</li>
     <li>Когда Nginx мерджит конфигурацию сервера с главной конфигурацией</li>
-    <li>Когда Nginx инициализирует конфигурацию локешна</li>
-    <li>Когда Nginx мерджит конфигурацией сервера с вложенной конфигурацией локешна</li>
+    <li>Когда Nginx инициализирует конфигурацию локейшна</li>
+    <li>Когда Nginx мерджит конфигурацией сервера с вложенной конфигурацией локейшна</li>
     <li>Когда запускается главный процесс Nginx'а</li>
     <li>Когда запускается новый рабочий процесс</li>
     <li>Когда рабочий процесс завершается</li>
@@ -185,26 +185,27 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <a name="components"></a>
-<h2>2. Components of an Nginx Module</h2>
+<h2>2. Компоненты Модуля Nginx</h2>
 
-<p>As I said, you have a <em>lot</em> of flexibility when it comes to making an Nginx module. This section will describe the parts that are almost always present. It's intended as a guide for understanding a module, and a reference for when you think you're ready to start writing a module.</p>
+<p>Как я уже сказал, в вашем распоряжении <em>огромный</em> запас гибкости для разработки модуля Nginx'а. В этом разделе описываются те части, которые есть практически в любом модуле. Это моможет нам лучше понять устройство модуля. А так же вы сможете оценить, когда можно будет перейти к написанию собственного модуля.</p>
 
 <a name="configuration-structs"></a>
-<h3>2.1. Module Configuration Struct(s)</h3>
+<h3>2.1. Структуры конфигурации Модуля</h3>
 
-<p>Modules can define up to three configuration structs, one for the main, server, and location contexts. Most modules just need a location configuration. The naming convention for these is <code>ngx_http_&lt;module name&gt;_(main|srv|loc)_conf_t</code>. Here's an example, taken from the dav module:</p>
-
-<code><pre>
+Модули могут определить до трех конфигурационных структур, по одной для главного контекста, контекста сервера и контекста локейшна. Большинству модулей достаточно конфигурации локейшна. Для этих структур принято такое соглашение о наименовании: <code>ngx_http_&lt;название_модуля&gt;_(main|srv|loc)_conf_t</code>. Вот пример, взятый из модуля dav:
+<code>
+<pre><code class="cpp">
 typedef struct {
     ngx_uint_t  methods;
     ngx_flag_t  create_full_put_path;
     ngx_uint_t  access;
 } ngx_http_dav_loc_conf_t;
-</pre></code>
+</code></pre>
+</code>
 
-<p>Notice that Nginx has special data types (<code>ngx_uint_t</code> and <code>ngx_flag_t</code>); these are just aliases for the primitive data types you know and love (cf. <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_config.h#L79">core/ngx_config.h</a> if you're curious).</p>
+<p>Заметьте, что в Nginx'е используются специальные типы данных (<code>ngx_uint_t</code> и <code>ngx_flag_t</code>). Это просто алиасы для простых типов данных, которые мы все знаем и любим (см. <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_config.h#L79">core/ngx_config.h</a>, если есть сомнения).</p>
 
-<p>The elements in the configuration structs are populated by module directives.</p>
+Элементы конфигурационной структуры заполняются директивами модуля.
 
 <a name="directives"></a>
 <h3>2.2. Module Directives</h3>
