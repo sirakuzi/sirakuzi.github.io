@@ -277,34 +277,34 @@ struct ngx_command_t {
     <li><code>NGX_CONF_2MORE</code>: директиве принимает 2 или более аргументов</li>
 </ul>
 
+<p>Существуют также еще несколько других опций, смотрите <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L1">core/ngx_conf_file.h</a>.</p>
 
-
-<p>There are a few other options, too, see <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L1">core/ngx_conf_file.h</a>.</p>
-
-<p>The <code>set</code> struct element is a pointer to a function for setting up part of the module's configuration; typically this function will translate the arguments passed to this directive and save an appropriate value in its configuration struct. This setup function will take three arguments:</p>
+<p>В поле структуры <code>set</code> хранится указатель на функцию, вызываемую для настройки части конфигурации модуля; обычно, эта функция преводит данные из аргументов в удобный формат и сохраняет их в соответстующей структуре конфигурации модуля. Функция принимает три аргумента:</p>
 
 <ol>
-    <li>a pointer to an <code>ngx_conf_t</code> struct, which contains the arguments passed to the directive
-    <li>a pointer to the current <code>ngx_command_t</code> struct
-    <li>a pointer to the module's custom configuration struct
+    <li>указатель на структуру <code>ngx_conf_t</code>, которая содержит переданные директиве аргументы</li>
+    <li>указатель на текущую структуру <code>ngx_command_t</code></li>
+    <li>указатель на собственную структуру конфигурации модуля</li>
 </ol>
 
-<p>This setup function will be called when the directive is encountered. Nginx provides a number of functions for setting particular types of values in the custom configuration struct. These functions include:</p>
+<p>Эта функция настройки будет вызвана тогда, когда соответствующая директива будет встречена в конфигурационном файле. Nginx предосталяет набор функций для перевода разных типов параметров в структуру для последующей обработки. Среди этих функций хочу виделить следующие:</p>
 
 <ul>
-    <li><code>ngx_conf_set_flag_slot</code>: translates "on" or "off" to 1 or 0
-    <li><code>ngx_conf_set_str_slot</code>: saves a string as an <code>ngx_str_t</code>
-    <li><code>ngx_conf_set_num_slot</code>: parses a number and saves it to an <code>int</code>
-    <li><code>ngx_conf_set_size_slot</code>: parses a data size ("8k", "1m", etc.) and saves it to a <code>size_t</code>
+    <li><code>ngx_conf_set_flag_slot</code>: переводит "on" или "off" в 1 или 0</li>
+    <li><code>ngx_conf_set_str_slot</code>: певодит строку параметра в <code>ngx_str_t</code></li>
+    <li><code>ngx_conf_set_num_slot</code>: парсит число и возвращает его как <code>int</code></li>
+    <li><code>ngx_conf_set_size_slot</code>: парсит размер ("8k", "1m" и т.д.) и возвращает его как <code>size_t</code></li>
 </ul>
 
-<p>There are several others, and they're quite handy (see <a href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L329" class="source">core/ngx_conf_file.h</a>). Modules can also put a reference to their own function here, if the built-ins aren't quite good enough.</p>
+<p>Существуют и другие подобные функции, и они тоже очень удобны (посмотрите <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L329">core/ngx_conf_file.h</a>). Модули также могут здесь ссылаться и на свои функции, если по каким-то причинам не достаточно встроенных.</p>
 
-<p>How do these built-in functions know where to save the data? That's where the next two elements of <code>ngx_command_t</code> come in, <code>conf</code> and <code>offset</code>. <code>conf</code> tells Nginx whether this value will get saved to the module's main configuration, server configuration, or location configuration (with <code>NGX_HTTP_MAIN_CONF_OFFSET</code>, <code>NGX_HTTP_SRV_CONF_OFFSET</code>, or <code>NGX_HTTP_LOC_CONF_OFFSET</code>). <code>offset</code> then specifies which part of this configuration struct to write to.</p>
+<p>Откуда эти встроенные функции знают куда сохранять данные? В этом им помогают следующие два поля структуры <code>ngx_command_t</code>: <code>conf</code> и <code>offset</code>. Поле <code>conf</code> указывае Nginx'у куда сохранить данные: в главную, серверную или конфигурационную структуру локешна (задается с помощью <code>NGX_HTTP_MAIN_CONF_OFFSET</code>, <code>NGX_HTTP_SRV_CONF_OFFSET</code>, или <code>NGX_HTTP_LOC_CONF_OFFSET</code>). Поле <code>offset</code> указывает в какую часть структуры записать значение.</p>
 
-<p><em>Finally</em>, <code>post</code> is just a pointer to other crap the module might need while it's reading the configuration. It's often <code>NULL</code>.
+<p>И,<em>наконец</em>, поле <code>post</code> это указатель на еще одну штуку, которая может потребоваться модулю на этапе чтения конфигурации. Чаще всего равна <code>NULL</code>.</p>
 
-<p>The commands array is terminated with <code>ngx_null_command</code> as the last element.</p>
+<p>Набор директив должен заканчиваться полем <code>ngx_null_command</code>.</p>
+
+
 
 <a name="context"></a>
 <h3>2.3. The Module Context</h3>
