@@ -15,10 +15,10 @@ div.figure img { display: block; margin: 0 auto 1em; }
 </style>
 
 <section>
-<small>Оригинал <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
+<small><p>Оригинал <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
 <br>Перевод <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
-<br>Впервые опубликован: 28 апреля 2007 г. (Последнее измнеение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</small>
+<br>Впервые опубликован: 28 апреля 2007 г. (Последнее измнеение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
 <section>
@@ -58,76 +58,34 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 
 <section>
-<h>Содержание</h>
+<h1>Содержание</h1>
 <ol start="0">
     <li><a href="#prerequisites">Предварительные требования</a></li>
-    <li><a href="#overview">Устройство модулей в первом приближении</a></li>
-    <li><a href="#components">Компоненты модуля Nginx</a>
+    <li><a href="#overview">Устройство Модулей в первом приближении</a></li>
+    <li><a href="#components">Компоненты Модуля Nginx</a>
     <ol>
-        <li><a href="#configuration-structs">Структуры конфигурации модуля</a></li>
-        <li><a href="#directives">Директивы модуля</a></li>
-        <li><a href="#context">Контекст модуля</a>
+        <li><a href="#configuration-structs">Структуры конфигурации Модуля</a></li>
+        <li><a href="#directives">Директивы Модуля</a></li>
+        <li><a href="#context">Контекст Модуля</a></li>
         <ol>
             <li><a href="#create_loc_conf">create_loc_conf</a></li>
             <li><a href="#merge_loc_conf">merge_loc_conf</a></li>
         </ol>
-        </li>
-        <li><a href="#definition">Описание модуля</a></li>
-        <li>
-            <a href="#installation">Установка модуля</a>
-            <ol>
-                <li><a href="#handler-installation">Установка обработчика</a></li>
-                <li><a href="#filter-installation">Установка фильтра</a></li>
-            </ol>
-        </li>
+        <li><a href="#definition">Описание Модуля</a></li>
+        <li><a href="#installation">Установка Модуля</a></li>
     </ol>
-    </li>
-    <li>
-        <a href="#types">Обработчики, фильтры и балансировщики нагрузки</a>
-        <ol>
-            <li>
-                <a href="#non-proxying">Устройство обработчиков (не проксирующих)</a>
-                <ol>
-                    <li><a href="#non-proxying-config">Получение конфигурации локейшна</a></li>
-                    <li><a href="#non-proxying-response">Генерация ответа</a></li>
-                    <li><a href="#non-proxying-header">Отправка заголовка ответа</a></li>
-                    <li><a href="#non-proxying-body">Отправка тела ответа</a></li>
-                </ol>
-            </li>
-        </ol>
-    </li>
-</ol>
-
-<h2>Table of Contents</h2>
-<ol start="0">
-    <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#overview">High-Level Overview of Nginx's Module Delegation</a></li>
-    <li><a href="#components">Components of an Nginx Module</a></li>
+    <li><a href="#handlers">Обработчики</a></li>
     <ol>
-        <li><a href="#configuration-structs">Module Configuration Struct(s)</a></li>
-        <li><a href="#directives">Module Directives</a></li>
-        <li><a href="#context">The Module Context</a></li>
+        <li><a href="#non-proxying">Устройство Обработчиков (не проксирующих)</a></li>
         <ol>
-            <li><a href="#create_loc_conf">create_loc_conf</a></li>
-            <li><a href="#merge_loc_conf">merge_loc_conf</a></li>
+            <li><a href="#non-proxying-config">Получение конфигурации локейшна</a></li>
+            <li><a href="#non-proxying-response">Создание ответа</a></li>
+            <li><a href="#non-proxying-header">Отправка заголовка</a></li>
+            <li><a href="#non-proxying-body">Отправка тела</a></li>
         </ol>
-        <li><a href="#definition">The Module Definition</a></li>
-        <li><a href="#installation">Module Installation</a></li>
+        <li><a href="#proxying">Устроство Обработчиков Upstream (a.k.a. Прокси)</a></li>
         <ol>
-        </ol>
-    </ol>
-    <li><a href="#handlers">Handlers</a></li>
-    <ol>
-        <li><a href="#non-proxying">Anatomy of a Handler (Non-proxying)</a></li>
-        <ol>
-            <li><a href="#non-proxying-config">Getting the location configuration</a></li>
-            <li><a href="#non-proxying-response">Generating a response</a></li>
-            <li><a href="#non-proxying-header">Sending the header</a></li>
-            <li><a href="#non-proxying-body">Sending the body</a></li>
-        </ol>
-        <li><a href="#proxying">Anatomy of an Upstream (a.k.a. Proxy) Handler</a></li>
-        <ol>
-            <li><a href="#proxying-summary">Summary of upstream callbacks</a></li>
+            <li><a href="#proxying-summary">Основные свойства upstream callback</a></li>
             <li><a href="#create_request">The create_request callback</a></li>
             <li><a href="#process_header">The process_header callback</a></li>
             <li><a href="#keeping-state">Keeping state</a></li>
