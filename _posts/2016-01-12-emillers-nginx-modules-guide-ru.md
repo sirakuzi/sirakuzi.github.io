@@ -15,9 +15,9 @@ div.figure img { display: block; margin: 0 auto 1em; }
 </style>
 
 <section>
-<small><p>Оригинал <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
+<small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
-<br>Перевод <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
+<br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> с использованием перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
 <br>Впервые опубликован: 28 апреля 2007 г. (Последнее измнеение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
@@ -66,39 +66,39 @@ div.figure img { display: block; margin: 0 auto 1em; }
     <ol>
         <li><a href="#configuration-structs">Структуры конфигурации Модуля</a></li>
         <li><a href="#directives">Директивы Модуля</a></li>
-        <li><a href="#context">Контекст Модуля</a></li>
+        <li><a href="#context">Контекст Модуля</a>
         <ol>
             <li><a href="#create_loc_conf">create_loc_conf</a></li>
             <li><a href="#merge_loc_conf">merge_loc_conf</a></li>
         </ol>
         <li><a href="#definition">Описание Модуля</a></li>
         <li><a href="#installation">Установка Модуля</a></li>
-    </ol>
-    <li><a href="#handlers">Обработчики</a></li>
+    </ol></li>
+    <li><a href="#handlers">Обработчики</a>
     <ol>
-        <li><a href="#non-proxying">Устройство Обработчиков (не проксирующих)</a></li>
+        <li><a href="#non-proxying">Устройство Обработчиков (не проксирующих)</a>
         <ol>
             <li><a href="#non-proxying-config">Получение конфигурации локейшна</a></li>
             <li><a href="#non-proxying-response">Создание ответа</a></li>
             <li><a href="#non-proxying-header">Отправка заголовка</a></li>
             <li><a href="#non-proxying-body">Отправка тела</a></li>
-        </ol>
-        <li><a href="#proxying">Устроство Обработчиков Upstream (a.k.a. Прокси)</a></li>
+        </ol></li>
+        <li><a href="#proxying">Устроство Обработчиков Upstream (a.k.a. Прокси)</a>
         <ol>
             <li><a href="#proxying-summary">Основные свойства upstream callback</a></li>
             <li><a href="#create_request">The create_request callback</a></li>
             <li><a href="#process_header">The process_header callback</a></li>
             <li><a href="#keeping-state">Keeping state</a></li>
-        </ol>
+        </ol></li>
         <li><a href="#handler-installation">Handler Installation</a></li>
-    </ol>
-    <li><a href="#filters">Filters</a></li>
+    </ol></li>
+    <li><a href="#filters">Filters</a>
     <ol>
         <li><a href="#filters-header">Anatomy of a Header Filter</a></li>
         <li><a href="#filters-body">Anatomy of a Body Filter</a></li>
         <li><a href="#filters-installation">Filter Installation</a></li>
-    </ol>
-    <li><a href="#load_balancers">Load-Balancers</a></li>
+    </ol></li>
+    <li><a href="#load_balancers">Load-Balancers</a>
     <ol>
         <li><a href="#lb-directive">The enabling directive</a></li>
         <li><a href="#lb-registration">The registration function</a></li>
@@ -106,24 +106,26 @@ div.figure img { display: block; margin: 0 auto 1em; }
         <li><a href="#lb-peer">The peer initialization function</a></li>
         <li><a href="#lb-function">The load-balancing function</a></li>
         <li><a href="#lb-release">The peer release function</a></li>
-    </ol>
+    </ol></li>
     <li><a href="#compiling">Writing and Compiling a New Nginx Module</a></li>
     <li><a href="#advanced">Advanced Topics</a></li>
     <li><a href="#code">Code References</a></li>
 </ol>
 
-<a name="prerequisites"></a><h2>0. Prerequisites</h2>
+<section>
+<a name="prerequisites"></a>
+<h1>0. Предварительные требования</h1>
+<p>Вы должны неплохо знать Си. Не просто его синтаксис, а то, как работать со структурами и не бояться указателей и ссылок на функции. А также иметь представление о препроцессоре и макросах. Если вам надо немного освежить знания, то ничто не сможет сравниться с <a href="https://ru.wikipedia.org/wiki/Язык_программирования_Си_(книга)">K&amp;R</a>.</p>
 
-<p>You should be comfortable with C. Not just "C-syntax"; you should know your way around a struct and not be scared off by pointers and function references, and be cognizant of the preprocessor. If you need to brush up, nothing beats <a href="http://en.wikipedia.org/wiki/The_C_Programming_Language_(book)">K&amp;R</a>.</p>
+<p>Полезно понимать основы HTTP. Мы же, вообще-то, собираемся работать с web-сервером.</p>
 
-<p>Basic understanding of HTTP is useful. You'll be working on a web server, after all.</p>
+<p>Пригодятся знания структуры конфигурационного файла Nginx'а. Вот основные моменты: существуют четыре <em>контекста</em> (называеются они <em>main</em> — главный, <em>server</em> — сервер, <em>upstream</em> — апстрим, и <em>location</em> — локейшн) в которых могут быть директивы с одним и более параметрами. Директивы в главном контексте применяются ко всему-всему; директивы из котекста сервера применяются к конкретному хосту/порту; директивы в апстриме описывают набор бэкендов; а директивы в контексте локешна применяются к разным путям запроса (например, "/", "/images" и т.д.) Локешн наследует конфигурацию содержащему его серверному контексту, а сервер наследует главному контексту. Контекст апстрима не наследует никому, у него собственные директивы, которых больше нигде не используются. Я буду иногда упоминать эти четыре контекста, так что… не забывайте про них.</p>
 
-<p>You should also be familiar with Nginx's configuration file. If you're not, here's the gist of it: there are four <em>contexts</em> (called <em>main</em>, <em>server</em>, <em>upstream</em>, and <em>location</em>) which can contain directives with one or more arguments. Directives in the main context apply to everything; directives in the server context apply to a particular host/port; directives in the upstream context refer to a set of backend servers; and directives in a location context apply only to matching web locations (e.g., "/", "/images", etc.) A location context inherits from the surrounding server context, and a server context inherits from the main context. The upstream context neither inherits nor imparts its properties; it has its own special directives that don't really apply elsewhere. I'll refer to these four contexts quite a bit, so&hellip; don't forget them.</p>
+<p>Ну что же, начнем!</p>
 
-<p>Let's get started.</p>
-
+<section>
 <a name="overview"></a>
-<h2>1. High-Level Overview of Nginx's Module Delegation</h2>
+<h1>1. Устройство Модулей в первом приближении</h1>
 
 <p>Nginx modules have three roles we'll cover:</p>
 <ul>
