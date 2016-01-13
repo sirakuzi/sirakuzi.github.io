@@ -367,9 +367,9 @@ static ngx_http_module_t  ngx_http_circle_gif_module_ctx = {
 <a name="create_loc_conf"></a>
 <h4>2.3.1. create_loc_conf</h4>
 
-<p>Here's what a bare-bones create_loc_conf function looks like, taken from the circle_gif module I wrote (see the <a href="/nginx/ngx_http_circle_gif_module.c.txt">the source</a>). It takes a directive struct (<code>ngx_conf_t</code>) and returns a newly created module configuration struct (in this case <code>ngx_http_circle_gif_loc_conf_t</code>).</p>
+<p>Вот так выглядит минимальная реализация функции <code>create_loc_conf</code>, взятая из моего модуля circle_gif (за подробностями в <a href="/nginx/ngx_http_circle_gif_module.c.txt">исходник</a>). Она получает управляющую структуру (<code>ngx_conf_t</code>) и возвращает вновь созданную структуру конфигурации модуля (в этом примере <code>ngx_http_circle_gif_loc_conf_t</code>).</p>
 
-<code><pre>
+<pre><code class="cpp">
 static void *
 ngx_http_circle_gif_create_loc_conf(ngx_conf_t *cf)
 {
@@ -383,18 +383,18 @@ ngx_http_circle_gif_create_loc_conf(ngx_conf_t *cf)
     conf-&gt;max_radius = NGX_CONF_UNSET_UINT;
     return conf;
 }
-</pre></code>
+</code></pre>
 
-<p>First thing to notice is Nginx's memory allocation; it takes care of the <code>free</code>'ing as long as the module uses <code>ngx_palloc</code> (a <code>malloc</code> wrapper) or <code>ngx_pcalloc</code> (a <code>calloc</code> wrapper).</p>
+<p>Прежде всего обратите внимание на особенность управления памятью в Nginx'е: он сам позаботится об освобождении памяти - <code>free</code> только тогда, когда для выделения памяти вы используете <code>ngx_palloc</code> (умную обертку для <code>malloc</code>) или <code>ngx_pcalloc</code> (умную обертку для <code>calloc</code>).</p>
 
-<p>The possible UNSET constants are <code>NGX_CONF_UNSET_UINT</code>, <code>NGX_CONF_UNSET_PTR</code>, <code>NGX_CONF_UNSET_SIZE</code>, <code>NGX_CONF_UNSET_MSEC</code>, and the catch-all <code>NGX_CONF_UNSET</code>. UNSET tell the merging function that the value should be overridden.</p>
+<p>Возможными вариантами задания UNSET являются: <code>NGX_CONF_UNSET_UINT</code>, <code>NGX_CONF_UNSET_PTR</code>, <code>NGX_CONF_UNSET_SIZE</code>, <code>NGX_CONF_UNSET_MSEC</code>, и для всех случаев <code>NGX_CONF_UNSET</code>. UNSET показывает функции слияния конфигов, что это значение надо переопределить.</p>
 
 <a name="merge_loc_conf"></a>
 <h4>2.3.2. merge_loc_conf</h4>
 
-<p>Here's the merging function used in the circle_gif module:</p>
+<p>Вот так выглядит функция слияния конфигов в модуле circle_gif:</p>
 
-<code><pre>
+<pre><code class="cpp">
 static char *
 ngx_http_circle_gif_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 {
@@ -406,27 +406,27 @@ ngx_http_circle_gif_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 
     if (conf-&gt;min_radius &lt; 1) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, 
-            "min_radius must be equal or more than 1");
+            "min_radius должен быть больше или равен 1");
         return NGX_CONF_ERROR;
     }
     if (conf-&gt;max_radius &lt; conf-&gt;min_radius) {
         ngx_conf_log_error(NGX_LOG_EMERG, cf, 0, 
-            "max_radius must be equal or more than min_radius");
+            "max_radius должен быть больше или равен min_radius");
         return NGX_CONF_ERROR;
     }
 
     return NGX_CONF_OK;
 }
-</pre></code>
+</code></pre>
 
-<p>Notice first that Nginx provides nice merging functions for different data types (<code>ngx_conf_merge_&lt;data type&gt;_value</code>); the arguments are</p>
+<p>Приятной особенностью Nginx'а является набор функций для слияния разных типов данных (<code>ngx_conf_merge_&lt;тип_данных&gt;_value</code>); их аргументами являются</p>
 <ol>
-    <li><em>this</em> location's value</li>
-    <li>the value to inherit if #1 is not set</li>
-    <li>the default if neither #1 nor #2 is set</li>
+    <li>значение <em>текущего</em> локешна</li>
+    <li>значение, задаваемое, если #1 не установлено</li>
+    <li>задаваемое по умолчанию, если не установлено ни #1, ни #2</li>
 </ol>
 
-<p>The result is then stored in the first argument. Available merge functions include <code>ngx_conf_merge_size_value</code>, <code>ngx_conf_merge_msec_value</code>, and others. See <a href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L254" class="source">core/ngx_conf_file.h</a> for a full list.</p>
+<p>Результат будет записан в первый аргумент. Примерами таких функций являются <code>ngx_conf_merge_size_value</code>, <code>ngx_conf_merge_msec_value</code> и другие. Обратитесь к <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L254">core/ngx_conf_file.h</a> за полным списком.</p>
 
 <div class="aside">
 <p>Trivia question: How do these functions write to the first argument, since the first argument is passed in by value?</p>
