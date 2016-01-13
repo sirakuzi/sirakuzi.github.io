@@ -79,7 +79,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
         <li><a href="#non-proxying">Устройство Обработчиков (не проксирующих)</a>
         <ol>
             <li><a href="#non-proxying-config">Получение конфигурации локейшна</a></li>
-            <li><a href="#non-proxying-response">Создание ответа</a></li>
+            <li><a href="#non-proxying-response">Формирование ответа</a></li>
             <li><a href="#non-proxying-header">Отправка заголовка</a></li>
             <li><a href="#non-proxying-body">Отправка тела</a></li>
         </ol></li>
@@ -462,45 +462,45 @@ ngx_module_t  ngx_http_&lt;имя_модуля&gt;_module = {
 <a name="installation"></a>
 <h3>2.5. Установка Модуля</h3>
 
-<p>The proper way to install a module depends on whether the module is a handler, filter, or load-balancer; so the details are reserved for those respective sections.
+<p>Надлежащий способ установки модуля зависит от того, какого этот модуль типа - Обработчик, Фильтр, или Балансировщик нагрузки, поэтому детали установки будут описаны в соответствующих разделах.</p>
 
 <a name="handlers"></a>
-<h2>3. Handlers</h2>
+<h2>3. Обработчики</h2>
 
-<p>Now we'll put some trivial modules under the microscope to see how they work.</p>
+<p>Теперь внимательно рассмотрим несколько простейших модулей и разберемся как они работают.</p>
 
 <a name="non-proxying"></a>
-<h3>3.1. Anatomy of a Handler (Non-proxying)</h3>
+<h3>3.1. Устройство Обработчиков (не проксирующих)</h3>
 
-<p>Handlers typically do four things: get the location configuration, generate an appropriate response, send the header, and send the body. A handler has one argument, the request struct. A request struct has a lot of useful information about the client request, such as the request method, URI, and headers. We'll go over these steps one by one.</p>
+<p>Обработчики, обычно, делают четыре вещи: получают конфигурацию локешна, генерируют соответствующий ответ, отправляют заголовок и отправляют тело ответа. Обработчик получает один аргумент - структуру запроса. В структуре запроса хранится много молезной информации о запросе клиента, такой, как метод запроса, URI и загловки. Мы рассмотрим эти четыре шага один за другим.</p>
 
 <a name="non-proxying-config"></a>
-<h4>3.1.1. Getting the location configuration</h4>
+<h4>3.1.1. Получение конфигурации локейшна</h4>
 
-<p>This part's easy. All you need to do is call <code>ngx_http_get_module_loc_conf</code> and pass in the current request struct and the module definition. Here's the relevant part of my circle gif handler:</p>
+<p>Это простая часть. Все, что надо сделать, это вызвать <code>ngx_http_get_module_loc_conf</code> и передать параметрами структуру текущего запроса и описание модуля. Вот соответствующая часть из моего модуля circle_gif:</p>
 
-<code><pre>
+<pre><code class="cpp">
 static ngx_int_t
 ngx_http_circle_gif_handler(ngx_http_request_t *r)
 {
     ngx_http_circle_gif_loc_conf_t  *circle_gif_config;
     circle_gif_config = ngx_http_get_module_loc_conf(r, ngx_http_circle_gif_module);
     ...
-</pre></code>
+</code></pre>
 
-<p>Now I've got access to all the variables that I set up in my merge function.</p>
+<p>Вот так я получил доступ ко всем переменным, которые я объявил в функции слияния конфигов.</p>
 
 <a name="non-proxying-response"></a>
-<h4>3.1.2. Generating a response</h4>
+<h4>3.1.2. Формирование ответа</h4>
 
-<p>This is the interesting part where modules actually do work.</p>
+<p>Это та самая интересная часть, где модули делают полезную работу.</p>
 
-<p>The request struct will be helpful here, particularly these elements:</p>
+<p>Тут нам поможет стуктура запроса, а именно эти ее поля:</p>
 
-<code><pre>
+<pre><code class="cpp">
 typedef struct {
 ...
-/* the memory pool, used in the ngx_palloc functions */
+/* пул памяти, используемый в функциях типа ngx_palloc */
     ngx_pool_t                       *pool; 
     ngx_str_t                         uri;
     ngx_str_t                         args;
@@ -508,18 +508,18 @@ typedef struct {
 
 ...
 } ngx_http_request_t;
-</pre></code>
+</code></pre>
 
-<p><code>uri</code> is the path of the request, e.g. "/query.cgi".</p>
+<p><code>uri</code> это путь запроса, например "/query.cgi".</p>
 
-<p><code>args</code> is the part of the request after the question mark (e.g. "name=john").</p>
+<p><code>args</code> содержит нераспарсенные параметры запроса (идущая за знаком вопроса часть), например "name=john".</p>
 
-<p><code>headers_in</code> has a lot of useful stuff, such as cookies and browser information, but many modules don't need anything from it. See <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L158" class="source">http/ngx_http_request.h</a> if you're interested.</p>
+<p><code>headers_in</code> хранит много полезной информации, такой как куки и информация о браузере, но большинство модулей эти данные не использует. Посмотрите <a class="source" href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L158">http/ngx_http_request.h</a>, если интересно.</p>
 
-<p>This should be enough information to produce some useful output. The full <code>ngx_http_request_t</code> struct can be found in <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L316" class="source">http/ngx_http_request.h</a>.</p>
+<p>Этого вполне достаточно, чтобы смочь составить какой-нибудь полезный ответ. Полное описание структуры <code>ngx_http_request_t</code> можно найти в <a class="source" href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L316">http/ngx_http_request.h</a>.</p>
 
 <a name="non-proxying-header"></a>
-<h4>3.1.3. Sending the header</h4>
+<h4>3.1.3. Отправка заголовка</h4>
 
 <p>The response headers live in a struct called <code>headers_out</code> referenced by the request struct. The handler sets the ones it wants and then calls <code>ngx_http_send_header(r)</code>. Some useful parts of <code>headers_out</code> include:</p>
 
