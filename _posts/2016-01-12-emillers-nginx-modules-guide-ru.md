@@ -81,9 +81,9 @@ div.figure img { display: block; margin: 0 auto 1em; }
             <li><a href="#non-proxying-config">Получение конфигурации локейшна</a></li>
             <li><a href="#non-proxying-response">Формирование ответа</a></li>
             <li><a href="#non-proxying-header">Отправка заголовка</a></li>
-            <li><a href="#non-proxying-body">Отправка тела</a></li>
+            <li><a href="#non-proxying-body">Отправка тела ответа</a></li>
         </ol></li>
-        <li><a href="#proxying">Устроство Обработчиков Upstream (a.k.a. Прокси)</a>
+        <li><a href="#proxying">Устроство Обработчиков Upstream (так же известных как Прокси)</a>
         <ol>
             <li><a href="#proxying-summary">Основные свойства upstream callback</a></li>
             <li><a href="#create_request">The create_request callback</a></li>
@@ -521,9 +521,9 @@ typedef struct {
 <a name="non-proxying-header"></a>
 <h4>3.1.3. Отправка заголовка</h4>
 
-<p>The response headers live in a struct called <code>headers_out</code> referenced by the request struct. The handler sets the ones it wants and then calls <code>ngx_http_send_header(r)</code>. Some useful parts of <code>headers_out</code> include:</p>
+<p>Заголовки ответа находятся в структуре называемой <code>headers_out</code>. Она в свою очередь хранится в структуре запроса. Обработчик запроса выставляет те заголовки, которые ему нужны и затем вызывает <code>ngx_http_send_header(r)</code>. Вот наиболее полезные элементы <code>headers_out</code>:</p>
 
-<code><pre>
+<pre><code class="cpp">
 typedef stuct {
 ...
     ngx_uint_t                        status;
@@ -535,23 +535,23 @@ typedef stuct {
     time_t                            last_modified_time;
 ..
 } ngx_http_headers_out_t;
-</pre></code>
+</code></pre>
 
-<p>(The rest can be found in <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L220" class="source">http/ngx_http_request.h</a>.)</p>
+<p>(Остальное можно найти в <a class="source" href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L220">http/ngx_http_request.h</a>.)</p>
 
-<p>So for example, if a module were to set the Content-Type to "image/gif", Content-Length to 100, and return a 200 OK response, this code would do the trick:</p>
+<p>Например, если модулю необходимо выставить Content-Type в "image/gif", Content-Length в 100 и вернуть код ответа 200 OK, то следующий код поможет добиться желаемого результата:</p>
 
-<code><pre>
+<pre><code class="cpp">
     r-&gt;headers_out.status = NGX_HTTP_OK;
     r-&gt;headers_out.content_length_n = 100;
     r-&gt;headers_out.content_type.len = sizeof("image/gif") - 1;
     r-&gt;headers_out.content_type.data = (u_char *) "image/gif";
     ngx_http_send_header(r);
-</pre></code>
+</code></pre>
 
-<p>Most legal HTTP headers are available (somewhere) for your setting pleasure. However, some headers are a bit trickier to set than the ones you see above; for example, <code>content_encoding</code> has type <code>(ngx_table_elt_t*)</code>, so the module must allocate memory for it. This is done with a function called <code>ngx_list_push</code>, which takes in an <code>ngx_list_t</code> (similar to an array) and returns a reference to a newly created member of the list (of type <code>ngx_table_elt_t</code>). The following code sets the Content-Encoding to "deflate" and sends the header:</p>
+<p>Большинство стандартных HTTP загловоков доступны (где-либо) для изменения вами. Однако, некоторые заголовки задать немного сложнее чем те, которые вы видели выше. Например, <code>content_encoding</code> имеет тип <code>(ngx_table_elt_t*)</code>, поэтому модуль должен сам выделить память для этого заголовка. Это можно сделать с помощью функции <code>ngx_list_push</code>, которая принимает <code>ngx_list_t</code> (схож с массивом) и возвращает указатель на вновь созданный элемент в этом списке (типа <code>ngx_table_elt_t</code>). Код ниже устанавливает Content-Encoding в значение "deflate" и отправляет заголовок:</p>
 
-<code><pre>
+<pre><code class="cpp">
     r-&gt;headers_out.content_encoding = ngx_list_push(&amp;r-&gt;headers_out.headers);
     if (r-&gt;headers_out.content_encoding == NULL) {
         return NGX_ERROR;
@@ -562,65 +562,65 @@ typedef stuct {
     r-&gt;headers_out.content_encoding-&gt;value.len = sizeof("deflate") - 1;
     r-&gt;headers_out.content_encoding-&gt;value.data = (u_char *) "deflate";
     ngx_http_send_header(r);
-</pre></code>
+</code></pre>
 
-<p>This mechanism is usually used when a header can have multiple values simultaneously; it (theoretically) makes it easier for filter modules to add and delete certain values while preserving others, because they don't have to resort to string manipulation.</p>
+<p>Этот механизм обычно используется тогда, когда заголовок может иметь более одного значения одновременно. Этот прием (теоретически) позволяет модулям-фильтрам легче добавлять или удалять соответствующие значения, не изменяя другие, так как им не приходится заниматься работой со строками.</p>
 
 <a name="non-proxying-body"></a>
-<h4>3.1.4. Sending the body</h4>
+<h4>3.1.4. Отправка тела ответа</h4>
 
-<p>Now that the module has generated a response and put it in memory, it needs to assign the response to a special buffer, and then assign the buffer to a <em>chain link</em>, and <em>then</em> call the "send body" function on the chain link.</p>
+<p>Теперь, когда модуль сгенерировал ответ и записал его в память, ему необходимо присвоить ответ специальному буферу, затем передать буфер в специальное <em>звено чепочки</em>, и <em>далее</em> вызвать функцию «отправки ответа» на этом звене.</p>
 
-<p>What are the chain links for? Nginx lets handler modules generate (and filter modules process) responses one buffer at a time; each chain link keeps a pointer to the next link in the chain, or <code>NULL</code> if it's the last one. We'll keep it simple and assume there is just one buffer.</p>
+<p>Зачем нужны звенья цепочки? Nginx позволяет модулям-обработчикам формировать (а модулям-фильтрам обрабатывать) ответ по одному буферу за раз. Каждое звено цепи хранит ссылку на следующее звено цепи или <code>NULL</code> в случае, если оно последнее. Чтобы не усложнять пример, предстваим, что у нас есть только один буфер (и одно звено цепи).</p>
 
-<p>First, a module will declare the buffer and the chain link:</p>
+<p>Сначала модуль должен объявить буфер и звено цепи:</p>
 
-<code><pre>
+<pre><code class="cpp">
     ngx_buf_t    *b;
     ngx_chain_t   out;
-</pre></code>
+</code></pre>
 
-<p>The next step is to allocate the buffer and point our response data to it:</p>
+<p>Следующий шаг - выделить память под буфер и добавить его в данные ответа:</p>
 
-<code><pre>
+<pre><code class="cpp">
     b = ngx_pcalloc(r-&gt;pool, sizeof(ngx_buf_t));
     if (b == NULL) {
-        ngx_log_error(NGX_LOG_ERR, r-&gt;connection-&gt;log, 0, 
-            "Failed to allocate response buffer.");
+        ngx_log_error(NGX_LOG_ERR, r-&gt;connection-&gt;log, 0,
+            "Не удалось выделить память под буфер ответа.");
         return NGX_HTTP_INTERNAL_SERVER_ERROR;
     }
 
-    b-&gt;pos = some_bytes; /* first position in memory of the data */
-    b-&gt;last = some_bytes + some_bytes_length; /* last position */
+    b-&gt;pos = some_bytes; /* позиция первого байта в блоке данных */
+    b-&gt;last = some_bytes + some_bytes_length; /* последняя позиция */
 
-    b-&gt;memory = 1; /* content is in read-only memory */
-    /* (i.e., filters should copy it rather than rewrite in place) */
+    b-&gt;memory = 1; /* данные храняться в памяти только для чтения */
+    /* (то есть фильтры должны скопировать эти данные перед обработкой, вместо того, чтобы изменять их) */
 
-    b-&gt;last_buf = 1; /* there will be no more buffers in the request */
-</pre></code>
+    b-&gt;last_buf = 1; /* буферов в запросе больше не будет */
+</code></pre>
 
-<p>Now the module attaches it to the chain link:</p>
+<p>А здесь модуль присваивает буфер звену цепи:</p>
 
-<code><pre>
+<pre><code class="cpp">
     out.buf = b;
     out.next = NULL;
-</pre></code>
+</code></pre>
 
-<p>FINALLY, we send the body, and return the status code of the output filter chain all in one go:</p>
+<p>И наконец, за один прием мы отправляем тело ответа и возвращаем статус вызова функции отправки ответа:</p>
 
-<code><pre>
+<pre><code class="cpp">
     return ngx_http_output_filter(r, &amp;out);
-</pre></code>
+</code></pre>
 
-<p>Buffer chains are a critical part of Nginx's IO model, so you should be comfortable with how they work.</p>
+<p>Цепочки буферов — это критически важная часть модели ввода/вывода в Nginx'е, так что вы должны ими хорошо овладеть.</p>
 
 <div class="aside">
-    <p>Trivia question: Why does the buffer have the <code>last_buf</code> variable, when we can tell we're at the end of a chain by checking "next" for <code>NULL</code>?</p>
-    <p>Answer: A chain might be incomplete, i.e., have multiple buffers, but not all the buffers in this request or response. So some buffers are at the end of the chain but not the end of a request. This brings us to&hellip;</p>
+    <p>Вопрос: зачем буферу флаг <code>last_buf</code>, если мы можем определить что мы в конце цепи, проверяя "next" на <code>NULL</code>?</p>
+    <p>Ответ: цепь может быть незавершенной, то есть состоять из множества буферов, не не все буферы уже подготовлены в запросе или ответе. Таким образом, некоторые буферы будут в конце цепи, но не в конце запроса. И это приводит нас к&hellip;</p>
 </div>
 
 <a name="proxying"></a>
-<h3>3.2. Anatomy of an Upstream (a.k.a Proxy) Handler</h3>
+<h3>3.2. Устроство Обработчиков Upstream (так же известных как Прокси)</h3>
 
 <p>I waved my hands a bit about having your handler generate a response. Sometimes you'll be able to get that response just with a chunk of C code, but often you'll want to talk to another server (for example, if you're writing a module to implement another network protocol). You <em>could</em> do all of the network programming yourself, but what happens if you receive a partial response? You don't want to block the primary event loop with your own event loop while you're waiting for the rest of the response. You'd kill the Nginx's performance. Fortunately, Nginx lets you hook right into its own mechanisms for dealing with back-end servers (called "upstreams"), so your module can talk to another server without getting in the way of other requests. This section describes how a module talks to an upstream, such as Memcached, FastCGI, or another HTTP server.</p>
 
