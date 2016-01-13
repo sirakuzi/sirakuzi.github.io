@@ -827,17 +827,17 @@ ngx_http_circle_gif(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 <a name="filters-header"></a>
 <h3>4.1. Устройство Фильтра Заголовка</h3>
 
-<p>A header filter consists of three basic steps:</p>
+<p>Фильтр заголовка состоит из трех простых шагов:</p>
 
 <ol>
-    <li>Decide whether to operate on this response</li>
-    <li>Operate on the response</li>
-    <li>Call the next filter</li>
+    <li>Решает необходимо ли обрабатывать этот ответ</li>
+    <li>Обрабатывает ответ the response</li>
+    <li>Вызывает следующий фильтр</li>
 </ol>
 
 <p>To take an example, here's a simplified version of the "not modified" header filter, which sets the status to 304 Not Modified if the client's If-Modified-Since header matches the response's Last-Modified header. Note that header filters take in the <code>ngx_http_request_t</code> struct as the only argument, which gets us access to both the client headers and soon-to-be-sent response headers.</p>
 
-<code><pre>
+<pre><code class="cpp">
 static
 ngx_int_t ngx_http_not_modified_header_filter(ngx_http_request_t *r)
 {
@@ -860,7 +860,7 @@ ngx_int_t ngx_http_not_modified_header_filter(ngx_http_request_t *r)
 /* step 3: call the next filter */
     return ngx_http_next_header_filter(r);
 }
-</pre></code>
+</code></pre>
 
 <p>The <code>headers_out</code> structure is just the same as we saw in the section about handlers (cf. <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L220" class="source">http/ngx_http_request.h</a>), and can be manipulated to no end.</p>
 
@@ -960,8 +960,8 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
 
 <pre><code class="cpp">
 static ngx_http_module_t  ngx_http_chunked_filter_module_ctx = {
-    NULL,                                  /* preconfiguration */
-    ngx_http_chunked_filter_init,          /* postconfiguration */
+    NULL,                                  /* преконфигурация */
+    ngx_http_chunked_filter_init,          /* постконфигурация */
   ...
 };
 </code></pre>
