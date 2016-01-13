@@ -209,7 +209,7 @@ typedef struct {
 <a name="directives"></a>
 <h3>2.2. Директивы Модуля</h3>
 
-<p>Директивы модуля описыватся в статическом массиве элементов типа <code>ngx_command_t</code>. Вот пример того, как их определять взятый из маленького модуля, который я <em>(прим. перев. речь об Эване Миллере)</em> написал:</p>
+<p>Директивы модуля описыватся в статическом массиве элементов типа <code>ngx_command_t</code>. Вот пример того, как их определять взятый из маленького модуля, который я <em>(прим. перев. тут и далее речь об Эване Миллере)</em> написал:</p>
 
 <code>
 <pre><code class="cpp">
@@ -429,38 +429,38 @@ ngx_http_circle_gif_merge_loc_conf(ngx_conf_t *cf, void *parent, void *child)
 <p>Результат будет записан в первый аргумент. Примерами таких функций являются <code>ngx_conf_merge_size_value</code>, <code>ngx_conf_merge_msec_value</code> и другие. Обратитесь к <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L254">core/ngx_conf_file.h</a> за полным списком.</p>
 
 <div class="aside">
-<p>Trivia question: How do these functions write to the first argument, since the first argument is passed in by value?</p>
-<p>Answer: these functions are defined by the preprocessor (so they expand to a few "if" statements and assignments before reaching the compiler).</p>
+<p>Вопрос: как же этим функциям удается записать данные в первый аргумент, если он передается по значению?</p>
+<p>Ответ: это макросы (они разворачиваются в несколько конструкций <code>if</code>).</p>
 </div>
 
-<p>Notice also how errors are produced; the function writes something to the log file, and returns <code>NGX_CONF_ERROR</code>. That return code halts server startup. (Since the message is logged at level <code>NGX_LOG_EMERG</code>, the message will also go to standard out; FYI, <a href="http://lxr.evanmiller.org/http/source/core/ngx_log.h#L1" class="source">core/ngx_log.h</a> has a list of log levels.)</p>
+<p>Интересно так же то, как эти функции обрабатывают ошибки. В случае неудачи в лог выводится сообщение, и функция возвращает <code>NGX_CONF_ERROR</code>. В этом случает запуск сервера прекращается. Так как сообщение выводится с уровнем <code>NGX_LOG_EMERG</code>, оно будет продублировано в стандартный поток ошибок. Кстати, <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_log.h#L1">core/ngx_log.h</a> содержит полный список уровней вывода.)</p>
 
 <a name="definition"></a>
-<h3>2.4. The Module Definition</h3>
+<h3>2.4. Описание Модуля</h3>
 
-<p>Next we add one more layer of indirection, the <code>ngx_module_t</code> struct. The variable is called <code>ngx_http_&lt;module name&gt;_module</code>. This is where references to the context and directives go, as well as the remaining callbacks (exit thread, exit process, etc.). The module definition is sometimes used as a key to look up data associated with a particular module. The module definition usually looks like this:</p>
+<p>Теперь добавим еще один уровень абстракции, структуру <code>ngx_module_t</code>. Переменную назовем <code>ngx_http_&lt;имя_модуля&gt;_module</code>. В ней описываются указатели на контекст и директивы модуля вместе с остальными колбеками(завершение треда, завершение процесса и т.д.). Определение модуля иногда используется, чтобы найти какие-либо данные, связанные с этим модулем. Определение модуля обычно выглядит так:</p>
 
-<code><pre>
-ngx_module_t  ngx_http_&lt;module name&gt;_module = {
+<pre><code class="cpp">
+ngx_module_t  ngx_http_&lt;имя_модуля&gt;_module = {
     NGX_MODULE_V1,
-    &amp;ngx_http_&lt;module name&gt;_module_ctx, /* module context */
-    ngx_http_&lt;module name&gt;_commands,   /* module directives */
-    NGX_HTTP_MODULE,               /* module type */
-    NULL,                          /* init master */
-    NULL,                          /* init module */
-    NULL,                          /* init process */
-    NULL,                          /* init thread */
-    NULL,                          /* exit thread */
-    NULL,                          /* exit process */
-    NULL,                          /* exit master */
+    &amp;ngx_http_&lt;имя_модуля&gt;_module_ctx, /* контекст модуля */
+    ngx_http_&lt;module name&gt;_commands,   /* директивы модуля */
+    NGX_HTTP_MODULE,               /* тип модуля */
+    NULL,                          /* инициализация мастера */
+    NULL,                          /* инициализация модуля */
+    NULL,                          /* инициализация процесса */
+    NULL,                          /* инициализация треда */
+    NULL,                          /* завершение треда */
+    NULL,                          /* завершение процесса */
+    NULL,                          /* завершение мастера */
     NGX_MODULE_V1_PADDING
 };
-</pre></code>
+</code></pre>
 
-<p>&hellip;substituting &lt;module name&gt; appropriately. Modules can add callbacks for process/thread creation and death, but most modules keep things simple. (For the arguments passed to each callback, see <a href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L110" class="source">core/ngx_conf_file.h</a>.)</p>
+<p>…замените &lt;имя_модуля&gt; соответственно. Модули погут определять колбеки для моментов создания и уничтожения процессов и тредов, но большинство модулей стараются не усложнять себе жизнь. (Чтобы посмотреть список аргументов, обратитесь к <a class="source" href="http://lxr.evanmiller.org/http/source/core/ngx_conf_file.h#L110">core/ngx_conf_file.h</a>.)</p>
 
 <a name="installation"></a>
-<h3>2.5. Module Installation</h3>
+<h3>2.5. Установка Модуля</h3>
 
 <p>The proper way to install a module depends on whether the module is a handler, filter, or load-balancer; so the details are reserved for those respective sections.
 
