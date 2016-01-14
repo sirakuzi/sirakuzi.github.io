@@ -895,10 +895,10 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
 
 <p>В случае если у нас нет этого последнего буфера - умываем руки:</p>
 
-<code><pre>
+<pre><code class="cpp">
     if (!chain_contains_last_buffer)
         return ngx_http_next_body_filter(r, in);
-</pre></code>
+</code></pre>
 
 <p>Отлично, теперь мы уверены, что последний буфер находится в chain_link (звено цепи). Теперь выделим память под новый буфер:</p>
 
@@ -912,14 +912,14 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
 
 <p>Добавим туда данные:</p>
 
-<code><pre>
+<pre><code class="cpp">
     b-&gt;pos = (u_char *) "&lt;!-- Served by Nginx --&gt;";
     b-&gt;last = b-&gt;pos + sizeof("&lt;!-- Served by Nginx --&gt;") - 1;
-</pre></code>
+</code></pre>
 
 <p>И прицепим буфер к новому звену цепи:</p>
 
-<code><pre>
+<pre><code class="cpp">
     ngx_chain_t   *added_link;
 
     added_link = ngx_alloc_chain_link(r-&gt;pool);
@@ -928,26 +928,26 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
 
     added_link-&gt;buf = b;
     added_link-&gt;next = NULL;
-</pre></code>
+</code></pre>
 
 <p>И наконец, прицепим новое звено цепи к последнему звену, которое мы нашли ранее:</p>
 
-<code><pre>
+<pre><code class="cpp">
     chain_link-&gt;next = added_link;
-</pre></code>
+</code></pre>
 
 <p>И переназначим переменные последнего буфера "last_buf" в соответствии с новыми изменениями:</p>
 
-<code><pre>
+<pre><code class="cpp">
     chain_link-&gt;buf-&gt;last_buf = 0;
     added_link-&gt;buf-&gt;last_buf = 1;
-</pre></code>
+</code></pre>
 
 <p>И передадим измененную цепочку следующему фильтру вывода:</p>
 
-<code><pre>
+<pre><code class="cpp">
     return ngx_http_next_body_filter(r, in);
-</pre></code>
+</code></pre>
 
 <p>Итоговая функция потребует куда больше усилий, чем, к примеру, при помощи mod_perl (<code>$response-&gt;body =~ s/$/&lt;!-- Served by mod_perl --&gt;/</code>), но цепочка буферов это очень мощная концепция, позволяющая разработчикам работать с данными по мере поступления, так, чтобы клиент получал информацию настолько быстро, насколько это возможно. Но все же, по моему мнению, цепочка буферов отчаянно нуждается в хорошем интерфейсе, чтобы разработчики не смогли оставить цепочку в неопределенном состоянии. А пока пользуйтесь на свой страх и риск.</p>
 
