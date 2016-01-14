@@ -831,11 +831,11 @@ ngx_http_circle_gif(ngx_conf_t *cf, ngx_command_t *cmd, void *conf)
 
 <ol>
     <li>Решает необходимо ли обрабатывать этот ответ</li>
-    <li>Обрабатывает ответ the response</li>
+    <li>Обрабатывает ответ</li>
     <li>Вызывает следующий фильтр</li>
 </ol>
 
-<p>To take an example, here's a simplified version of the "not modified" header filter, which sets the status to 304 Not Modified if the client's If-Modified-Since header matches the response's Last-Modified header. Note that header filters take in the <code>ngx_http_request_t</code> struct as the only argument, which gets us access to both the client headers and soon-to-be-sent response headers.</p>
+<p>К примеру, вот упрощенная версия фильтра-заголовка "not modified", который устанавливает статус в 304 Not Modified если If-Modified-Since заголовок клиента соответствует Last-Modified заголовку ответа. Примите к сведению, что фильтры-заголовки принимают структуру <code>ngx_http_request_t</code> единственным аргументом, которая, в свою очередь, дает доступ и к заголовкам клиента и к заголовкам будущего ответа.</p>
 
 <pre><code class="cpp">
 static
@@ -846,26 +846,26 @@ ngx_int_t ngx_http_not_modified_header_filter(ngx_http_request_t *r)
     if_modified_since = ngx_http_parse_time(r-&gt;headers_in.if_modified_since-&gt;value.data,
                               r-&gt;headers_in.if_modified_since-&gt;value.len);
 
-/* step 1: decide whether to operate */
+/* step 1: решает необходимо ли обрабатывать этот ответ */
     if (if_modified_since != NGX_ERROR &amp;&amp; 
         if_modified_since == r-&gt;headers_out.last_modified_time) {
 
-/* step 2: operate on the header */
+/* step 2: обработка ответа */
         r-&gt;headers_out.status = NGX_HTTP_NOT_MODIFIED;
         r-&gt;headers_out.content_type.len = 0;
         ngx_http_clear_content_length(r);
         ngx_http_clear_accept_ranges(r);
     }
 
-/* step 3: call the next filter */
+/* step 3: вызов следующего фильтра */
     return ngx_http_next_header_filter(r);
 }
 </code></pre>
 
-<p>The <code>headers_out</code> structure is just the same as we saw in the section about handlers (cf. <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L220" class="source">http/ngx_http_request.h</a>), and can be manipulated to no end.</p>
+<p>Структура <code>headers_out</code> аналогична той, которую мы видели в секции обработчиков (см. <a href="http://lxr.evanmiller.org/http/source/http/ngx_http_request.h#L220" class="source">http/ngx_http_request.h</a>), и к ней можно обращаться любое число раз.</p>
 
 <a name="filters-body"></a>
-<h3>4.2. Anatomy of a Body Filter</h3>
+<h3>4.2. Устройство Фильтра тела ответа</h3>
 
 <p>The buffer chain makes it a little tricky to write a body filter, because the body filter can only operate on one buffer (chain link) at a time. The module must decide whether to <em>overwrite</em> the input buffer, <em>replace</em> the buffer with a newly allocated buffer, or <em>insert</em> a new buffer before or after the buffer in question. To complicate things, sometimes a module will receive several buffers so that it has an <em>incomplete buffer chain</em> that it must operate on. Unfortunately, Nginx does not provide a high-level API for manipulating the buffer chain, so body filters can be difficult to understand (and to write). But, here are some operations you might see in action.</p>
 
