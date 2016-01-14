@@ -867,19 +867,19 @@ ngx_int_t ngx_http_not_modified_header_filter(ngx_http_request_t *r)
 <a name="filters-body"></a>
 <h3>4.2. Устройство Фильтра тела ответа</h3>
 
-<p>The buffer chain makes it a little tricky to write a body filter, because the body filter can only operate on one buffer (chain link) at a time. The module must decide whether to <em>overwrite</em> the input buffer, <em>replace</em> the buffer with a newly allocated buffer, or <em>insert</em> a new buffer before or after the buffer in question. To complicate things, sometimes a module will receive several buffers so that it has an <em>incomplete buffer chain</em> that it must operate on. Unfortunately, Nginx does not provide a high-level API for manipulating the buffer chain, so body filters can be difficult to understand (and to write). But, here are some operations you might see in action.</p>
+<p>Цепочки буферов несколько усложняют написание фильтра тела ответа, т.к. фильтр тела может обрабатывать только один буфер (звено цепи) за раз. Модуль может либо <em>перезаписать</em> входной буфер, либо <em>заменить</em> буфер новым выделенным буфером, либо <em>вставить</em> новый буфер до или после входного буфера. В добавок к тому, иногда модуль может получить несколько буферов, то есть <em>неполную цепочку буферов</em>, с которой модулю необходимо работать. К сожалению, Nginx не предоставляет высокоуровневое API для управления цепочкой буферов, так что фильтры тела ответа иногда могут быть сложны для понимания (и для написания). Так что вот некоторые операции которые вам стоит посмотреть в деле.</p>
 
-<p>A body filter's prototype might look like this (example taken from the "chunked" filter in the Nginx source):</p>
+<p>Опытный экземпляр фильтра тела ответа может выглядеть так (пример взят из фильтра "chunked", находящегося в исходниках Nginx):</p>
 
-<code><pre>
+<pre><code class="cpp">
 static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t *in);
-</pre></code>
+</code></pre>
 
-<p>The first argument is our old friend the request struct. The second argument is a pointer to the head of the current partial chain (which could contain 0, 1, or more buffers).</p>
+<p>Первый аргумент это уже известная нам структура запроса. Второй аргумент - указатель на начало текущей не полной цепи (которая может содержать 0, 1 или более буфферов).</p>
 
-<p>Let's take a simple example. Suppose we want to insert the text "&lt;l!-- Served by Nginx --&gt;" to the end of every request. First, we need to figure out if the response's final buffer is included in the buffer chain we were given. Like I said, there's not a fancy API, so we'll be rolling our own for loop:</p>
+<p>Рассмотрим простой пример. Предположим мы ходить вставить текст "&lt;l!-- Served by Nginx --&gt;" в конец каждого запроса. Для начала, мы должны понять, включен ли последний буфер ответа (last_buf) в цепочку буферов которую мы получили. Как я уже говорил, изящного API для этого не существует, так что запускаем наш собственный цикл for:</p>
 
-<code><pre>
+<pre><code class="cpp">
     ngx_chain_t *chain_link;
     int chain_contains_last_buffer = 0;
 
@@ -891,33 +891,33 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
             break;
         chain_link = chain_link-&gt;next;
     }
-</pre></code>
+</code></pre>
 
-<p>Now let's bail out if we don't have that last buffer:</p>
+<p>В случае если у нас нет этого последнего буфера - умываем руки:</p>
 
 <code><pre>
     if (!chain_contains_last_buffer)
         return ngx_http_next_body_filter(r, in);
 </pre></code>
 
-<p>Super, now the last buffer is stored in chain_link. Now we allocate a new buffer:</p>
+<p>Отлично, теперь мы уверены, что последний буфер находится в chain_link (звено цепи). Теперь выделим память под новый буфер:</p>
 
-<code><pre>
+<pre><code class="cpp">
     ngx_buf_t    *b;
     b = ngx_calloc_buf(r-&gt;pool);
     if (b == NULL) {
         return NGX_ERROR;
     }
-</pre></code>
+</code></pre>
 
-<p>And put some data in it:</p>
+<p>Добавим туда данные:</p>
 
 <code><pre>
     b-&gt;pos = (u_char *) "&lt;!-- Served by Nginx --&gt;";
     b-&gt;last = b-&gt;pos + sizeof("&lt;!-- Served by Nginx --&gt;") - 1;
 </pre></code>
 
-<p>And hook the buffer into a new chain link:</p>
+<p>И прицепим буфер к новому звену цепи:</p>
 
 <code><pre>
     ngx_chain_t   *added_link;
@@ -930,26 +930,26 @@ static ngx_int_t ngx_http_chunked_body_filter(ngx_http_request_t *r, ngx_chain_t
     added_link-&gt;next = NULL;
 </pre></code>
 
-<p>Finally, hook the new chain link to the final chain link we found before:</p>
+<p>И наконец, прицепим новое звено цепи к последнему звену, которое мы нашли ранее:</p>
 
 <code><pre>
     chain_link-&gt;next = added_link;
 </pre></code>
 
-<p>And reset the "last_buf" variables to reflect reality:</p>
+<p>И переназначим переменные последнего буфера "last_buf" в соответствии с новыми изменениями:</p>
 
 <code><pre>
     chain_link-&gt;buf-&gt;last_buf = 0;
     added_link-&gt;buf-&gt;last_buf = 1;
 </pre></code>
 
-<p>And pass along the modified chain to the next output filter:</p>
+<p>И передадим измененную цепочку следующему фильтру вывода:</p>
 
 <code><pre>
     return ngx_http_next_body_filter(r, in);
 </pre></code>
 
-<p>The resulting function takes much more effort than what you'd do with, say, mod_perl (<code>$response-&gt;body =~ s/$/&lt;!-- Served by mod_perl --&gt;/</code>), but the buffer chain is a very powerful construct, allowing programmers to process data incrementally so that the client gets something as soon as possible. However, in my opinion, the buffer chain desperately needs a cleaner interface so that programmers can't leave the chain in an inconsistent state. For now, manipulate it at your own risk.</p>
+<p>Итоговая функция потребует куда больше усилий, чем, к примеру, при помощи mod_perl (<code>$response-&gt;body =~ s/$/&lt;!-- Served by mod_perl --&gt;/</code>), но цепочка буферов это очень мощная концепция, позволяющая разработчикам работать с данными по мере поступления, так, чтобы клиент получал информацию настолько быстро, насколько это возможно. Но все же, по моему мнению, цепочка буферов отчаянно нуждается в хорошем интерфейсе, чтобы разработчики не смогли оставить цепочку в неопределенном состоянии. А пока пользуйтесь на свой страх и риск.</p>
 
 <a name="filters-installation"></a>
 <h3>4.3. Установка Фильтра</h3>
