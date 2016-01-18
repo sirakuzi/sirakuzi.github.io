@@ -1,5 +1,5 @@
 ---
-title: "Руководство Эмиллера по разработке модулей для Nginx"
+title: "Руководство Эмиллера по разработке модулей для Nginx (перевод в процессе)"
 description: "Еще одна попытка перевести это произведение."
 categories: [posts]
 layout: post
@@ -17,7 +17,8 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <section>
 <small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
-<br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> на основе перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a> черновика от 14 июля 2008 г.
+<br>Перевод: <a href="http://sirakuzi.github.io/">sirakuzi.github.io</a> на основе перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
+<br>Перевод в процессе, последнее обновление 18 января 2016 г.
 <br>Первая публикация: 28 апреля 2007 г. (Последнее изменение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
@@ -1363,7 +1364,7 @@ CORE_LIBS="$CORE_LIBS -lfoo"
 <a name="advanced"></a>
 <h2>7. Advanced Topics</h2>
 
-<p>This guide covers the basics of Nginx module development. For tips on writing more sophisticated modules, be sure to check out <em><a href="nginx-modules-guide-advanced.html">Emiller's Advanced Topics In Nginx Module Development</a></em>.</p>
+<p>This guide covers the basics of Nginx module development. For tips on writing more sophisticated modules, be sure to check out <em><a href="/posts/2016/01/18/nginx-modules-guide-advanced.html">Emiller's Advanced Topics In Nginx Module Development</a></em>.</p>
 
 <a name="code"></a>
 <h2>Appendix A: Code References</h2>
@@ -1382,7 +1383,7 @@ CORE_LIBS="$CORE_LIBS -lfoo"
     <li>December 20, 2011: Corrected code sample in 4.2 (one more time).</li>
     <li>March 14, 2011: Corrected code sample in 4.2 (again).</li>
     <li>November 11, 2009: Corrected code sample in 4.2.</li>
-    <li>August 13, 2009: Reorganized, and moved <em><a href="nginx-modules-guide-advanced.html">Advanced Topics</a></em> to a separate article.</li>
+    <li>August 13, 2009: Reorganized, and moved <em><a href="/posts/2016/01/18/nginx-modules-guide-advanced.html">Advanced Topics</a></em> to a separate article.</li>
     <li>July 23, 2009: Corrected code sample in 3.5.3.</li>
     <li>December 24, 2008: Corrected code sample in 3.4.</li>
     <li>July 14, 2008: Added information about subrequests; slight reorganization</li>
