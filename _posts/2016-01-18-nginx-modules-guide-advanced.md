@@ -37,9 +37,9 @@ div.figure img { display: block; margin: 0 auto 1em; }
             <li><a href="#shm-spinlocks">Spinlocks, atomic memory access</a></li>
             <li><a href="#shm-rbtrees">Using rbtrees</a></li>
         </ol>
-        <li><a href="#subrequests">Subrequests</a></li>
+        <li><a href="#subrequests">Подзапросы</a></li>
         <ol>
-            <li><a href="#subrequests-redirect">Internal redirect</a></li>
+            <li><a href="#subrequests-redirect">Внутреннее перенаправление</a></li>
             <li><a href="#subrequests-single">A single subrequest</a></li>
             <li><a href="#subrequests-sequential">Sequential subrequests</a></li>
             <li><a href="#subrequests-parallel">Parallel subrequests</a></li>
@@ -91,9 +91,10 @@ To create a shared memory segment in nginx, you need to:
 </ul>
 </p>
 
+
 <p>
 These two points contain the main gotchas (that I came across), namely:
-<ol>
+<section><ol>
 <li><p>Your constructor will be called multiple times and it's up to you to find out whether you're called the first time (and should set something up), or not (and should probably leave everything alone). The prototype for the shared memory constructor looks like:
 <pre>
 static ngx_int_t init(ngx_shm_zone_t *shm_zone, void *data);
@@ -159,7 +160,7 @@ your segment unused and won't create it at all.</p>
 
 <p>Now that you know it, it's pretty clear that you cannot rely on having access to the shared memory while parsing the config. You can access the whole segment as <code>shm_zone-&gt;shm.addr</code> (which will be NULL before the segment gets really created). Any access after the first parsing run (e.g. inside request handlers or on subsequent reloads) should be fine.</p>
 
-</ol></p>
+</ol></section></p>
 </section>
 
 <section>
@@ -251,14 +252,14 @@ tree (probably according to some predefined order) and then calls
 <p>This chapter is about shared memory, not rbtrees so shoo! Go read the source for <a href="http://github.com/gnosek/nginx-upstream-fair/tree/master">upstream_fair</a> to see creating and walking an rbtree in action.</p>
 
 <a name="subrequests"></a>
-<h2>2. Subrequests</h2>
+<h2>2. Подзапросы</h2>
 
-<p>Subrequests are one of the most powerful aspects of Nginx. With subrequests, you can return the results of a <em>different URL</em> than what the client originally requested. Some web frameworks call this an "internal redirect." But Nginx goes further: not only can modules perform <em>multiple subrequests</em> and combine the outputs into a single response, subrequests can perform their own sub-subrequests, and sub-subrequests can initiate sub-sub-subrequests, and... you get the idea. Subrequests can map to files on the hard disk, other handlers, or upstream servers; it doesn't matter from the perspective of Nginx. As far as I know, only filters can issue subrequests.</p>
+<p>Подзапросы - одни из наиболее интересных составляющих Nginx. С подзапросами вы можете возвращать данные <em>URL отличного</em> от того который изначально запросил клиент. Некоторые среды веб-разработки называют это "внутренним перенаправлением". Но Nginx идет дальше: не только модули могут выполнять <em>множественные подзапросы</em> и объединять их выводы в один ответ, но и подзапросы могут выполнять их собственные под-подзапросы, и под-подзапросы могут инициировать под-под-подзапросы, и... вы поняли суть. Подзапросы могут обращаться к файлам на жестком диске, других обработчикам или к upstream-серверам; это не важно в концепции Nginx. Насколько я знаю ,только фильтры могут инициировать подзапросы.</p>
 
 <a name="subrequests-redirect"></a>
-<h3>2.1. Internal redirects</h3>
+<h3>2.1. Внутреннее перенаправление</h3>
 
-<p>If all you want to do is return a different URL than what the client originally requested, you will want to use the <code>ngx_http_internal_redirect</code> function. Its prototype is:
+<p>Если все что вы хотите это вернуть URL отличную от той которую вызвал пользователь, то рекомендую вам использовать функцию <code>ngx_http_internal_redirect</code>. Ее прообраз:
 
 <code><pre>
 ngx_int_t
