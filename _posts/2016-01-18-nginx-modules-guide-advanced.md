@@ -1,6 +1,6 @@
 ---
 title: "Расширенные возможности в разработке модулей для Nginx от Эмиллера"
-description: ""
+description: "Неполный перевод"
 categories: [posts]
 layout: post
 time: 15:48:25
@@ -14,17 +14,22 @@ div.figure
 div.figure img { display: block; margin: 0 auto 1em; }
 </style>
 
-<h1>Emiller's Advanced Topics In Nginx Module Development</h1>
+<section>
+<small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide-advanced.html">Emiller's Advanced Topics In Nginx Module Development</a>.
+<br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a> (в соавторстве с <a href="http://nginx.localdomain.pl/">Гжегожем Носеком (Grzegorz Nosek)</a>)
+<br>Неполный перевод: <a href="http://sirakuzi.github.io/">sirakuzi</a>.
+<br>Перевод в процессе, последнее обновление 28 января 2016 г.
+<br>Черновик от 13 августа 2009 г.</p></small>
+</section>
 
-<p>By <a href="/">Evan Miller</a> (with <a href="http://nginx.localdomain.pl/">Grzegorz Nosek</a>)</p>
+<section>
+<p>В свою очередь <em><a href="/posts/2016/01/12/emillers-nginx-modules-guide-ru.html">Руководство Эмиллера по разработке модулей для Nginx</a></em> описывает насущные проблемы при написании простого обработчика, фильтра или балансировщика нагрузки для Nginx, в то время как этот документ рассматривает три расширенных возможности для амбициозных разработчиков Nginx: общая память, подзапросы и парсинг (обработку). Поскольку эти темы находятся на границе вселенной Nginx, код представленный здесь довольно скуден. Примеры так же могут быть неактуальными. Но будем надеятся, что вам удастся не только остаться на плаву, но и приобрести несколько новых приспособлений в свой пояс.</p>
+</section>
 
-<p>DRAFT: August 13, 2009</p>
-
-<p>Whereas <em><a href="nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a></em> describes the bread-and-butter issues of writing a simple handler, filter, or load-balancer for Nginx, this document covers three advanced topics for the ambitious Nginx developer: shared memory, subrequests, and parsing. Because these are subjects on the boundaries of the Nginx universe, the code here may be sparse. The examples may be out of date. But hopefully, you will make it out not only alive, but with a few extra tools in your belt.</p>
-
-<h2>Table of Contents</h2>
+<section>
+<h2>Содержание</h2>
     <ol>
-        <li><a href="#shm">Shared Memory</a></li>
+        <li><a href="#shm">Общая память</a></li>
         <ol>
             <li><a href="#shm-foreword">A (fore)word of caution</a></li>
             <li><a href="#shm-creating">Creating and using a shared memory segment</a></li>
@@ -49,14 +54,18 @@ div.figure img { display: block; margin: 0 auto 1em; }
         </ol>
         <li><a href="#todo">TODO</a></li>
     </ol>
+</section>
 
+<section>
 <a name="shm"></a>
-<h2>1. Shared Memory</h2>
+<h2>1. Общая память</h2>
 
-<p><em>Guest chapter written by <a href="http://localdomain.pl/">Grzegorz Nosek</a></em></p>
+<p><em>Глава написана <a href="http://localdomain.pl/">Гжегожем Носеком</a></em></p>
 
 <p>Nginx, while being unthreaded, allows worker processes to share memory between them. However, this is quite different from the standard pool allocator as the shared segment has fixed size and cannot be resized without restarting nginx or destroying its contents in another way.</p>
+</section>
 
+<section>
 <a name="shm-foreword"></a>
 <h3>1.1. A (fore)word of caution</h3>
 <p>First of all, caveat hacker. This guide has been written several months after hands-on experience with shared memory in nginx and while I try my best to be accurate (and have spent some time refreshing my memory), in no way is it guaranteed. You've been warned.</p>
@@ -68,7 +77,9 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <p>For real-world usage of shared memory in nginx, see my <a href="http://github.com/gnosek/nginx-upstream-fair/tree/master">upstream_fair module</a>.</p>
 
 <p>This probably does not work on Windows at all. Core dumps in the rear mirror are closer than they appear.</p>
+</section>
 
+<section>
 <a name="shm-creating"></a>
 <h3>1.2. Creating and using a shared memory segment</h3>
 <p>
@@ -149,7 +160,9 @@ your segment unused and won't create it at all.</p>
 <p>Now that you know it, it's pretty clear that you cannot rely on having access to the shared memory while parsing the config. You can access the whole segment as <code>shm_zone-&gt;shm.addr</code> (which will be NULL before the segment gets really created). Any access after the first parsing run (e.g. inside request handlers or on subsequent reloads) should be fine.</p>
 
 </ol></p>
+</section>
 
+<section>
 <a name="shm-slab"></a>
 <h3>1.3. Using the slab allocator</h3>
 <p>Now that you have your new and shiny shm segment, how do you use it? The simplest way is to use another memory tool that nginx has at your disposal, namely the slab allocator. Nginx is nice enough to initialise the slab for you in every new shm segment, so you can either use it, or ignore the slab structures and overwrite them with your own data.</p>
@@ -162,7 +175,9 @@ your segment unused and won't create it at all.</p>
 </ul>
 
 The first argument is simply <code>(ngx_slab_pool_t *)shm_zone-&gt;shm.addr</code> and the other one is either the size of the block to allocate, or the pointer to the block to free. (trivia: not once is <code>ngx_slab_free</code> called in vanilla nginx code)</p>
+</section>
 
+<section>
 <a name="shm-spinlocks"></a>
 <h3>1.4. Spinlocks, atomic memory access</h3>
 
@@ -218,6 +233,7 @@ address. Returns 1 if <code>*lock</code> was equal to <code>old</code> before ov
 </li>
 </ul>
 </p>
+</section>
 
 <a name="shm-rbtrees"></a>
 <h3>1.5. Using rbtrees</h3>
@@ -636,5 +652,5 @@ NGX_ADDON_SRCS="$NGX_ADDON_SRCS $ngx_addon_dir/my_parser.c"
 
 <hr>
 
-<p><a href="/">Back to home page</a> &ndash; <a href="http://twitter.com/EvMill">Follow on Twitter</a> &ndash; <a href="/news.xml">Subscribe to RSS</a></p>
+<p><a href="/">Back to home page</a> &ndash; <a href="http://twitter.com/EvMill">Follow on Twitter</a></p>
 
