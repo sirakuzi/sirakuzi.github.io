@@ -40,7 +40,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
         <li><a href="#subrequests">Подзапросы</a></li>
         <ol>
             <li><a href="#subrequests-redirect">Внутреннее перенаправление</a></li>
-            <li><a href="#subrequests-single">A single subrequest</a></li>
+            <li><a href="#subrequests-single">Одиночный подзапрос</a></li>
             <li><a href="#subrequests-sequential">Sequential subrequests</a></li>
             <li><a href="#subrequests-parallel">Parallel subrequests</a></li>
         </ol>
@@ -254,7 +254,7 @@ tree (probably according to some predefined order) and then calls
 <a name="subrequests"></a>
 <h2>2. Подзапросы</h2>
 
-<p>Подзапросы - одни из наиболее интересных составляющих Nginx. С подзапросами вы можете возвращать данные <em>URL отличного</em> от того который изначально запросил клиент. Некоторые среды веб-разработки называют это "внутренним перенаправлением". Но Nginx идет дальше: не только модули могут выполнять <em>множественные подзапросы</em> и объединять их выводы в один ответ, но и подзапросы могут выполнять их собственные под-подзапросы, и под-подзапросы могут инициировать под-под-подзапросы, и... вы поняли суть. Подзапросы могут обращаться к файлам на жестком диске, других обработчикам или к upstream-серверам; это не важно в концепции Nginx. Насколько я знаю ,только фильтры могут инициировать подзапросы.</p>
+<p>Подзапросы - одни из наиболее интересных составляющих Nginx. С подзапросами вы можете возвращать данные <em>URL отличного</em> от того который изначально запросил клиент. Некоторые среды веб-разработки называют это "внутренним перенаправлением". Но Nginx идет дальше: не только модули могут выполнять <em>множественные подзапросы</em> и объединять их выводы в один ответ, но и подзапросы могут выполнять их собственные под-подзапросы, и под-подзапросы могут инициировать под-под-подзапросы, и... суть вы поняли. Подзапросы могут обращаться к файлам на жестком диске, других обработчикам или к upstream-серверам; это не важно в концепции Nginx. Насколько я знаю ,только фильтры могут инициировать подзапросы.</p>
 
 <a name="subrequests-redirect"></a>
 <h3>2.1. Внутреннее перенаправление</h3>
@@ -266,16 +266,16 @@ ngx_int_t
 ngx_http_internal_redirect(ngx_http_request_t *r, ngx_str_t *uri, ngx_str_t *args)
 </pre></code>
 
-<p>Where <code>r</code> is the request struct, and <code>uri</code> and <code>args</code> are the new URI. Note that URIs <em>must</em> be locations already defined in nginx.conf; you cannot, for instance, redirect to an arbitrary domain. Handlers should return the return value of <code>ngx_http_internal_redirect</code>, i.e. redirecting handlers will typically end like</p>
+<p>Где <code>r</code> это структура запроса, <code>uri</code> и <code>args</code> это новая URI. Примите к сведению что в качестве URI <em>должны</em> указываться локейшены уже определенные в nginx.conf; к примеру вы не сможете произвести перенаправление на произвольный домен. Обработчики должны возвращать возвращаемое значение фунцкии <code>ngx_http_internal_redirect</code>, т.е. перенапрявляющие обработчики обычно завершаются такой командой:</p>
 
 <code><pre>
 return ngx_http_internal_redirect(r, &amp;uri, &amp;args);
 </pre></code>
 
-<p>Internal redirects are used in the "index" module (which maps URLs that end in / to index.html) as well as Nginx's X-Accel-Redirect feature.</p>
+<p>Внутренние перенаправления используютя в модуле "index" (который перенаправляет URL оканчивающиеся на / на index.html), а так же в сервисе Nginx X-Accel-Redirect.</p>
 
 <a name="subrequests-single"></a>
-<h3>2.2. A single subrequest</h3>
+<h3>2.2. Одиночный подзапрос</h3>
 
 <p>Subrequests are most useful for inserting additional content <em>based on data from the original response</em>. For example, the SSI (server-side include) module uses a filter to scan the contents of the returned document, and then replaces "include" directives with the contents of the specified URLs.</p>
 
