@@ -277,7 +277,7 @@ return ngx_http_internal_redirect(r, &amp;uri, &amp;args);
 <a name="subrequests-single"></a>
 <h3>2.2. Одиночный подзапрос</h3>
 
-<p>Subrequests are most useful for inserting additional content <em>based on data from the original response</em>. For example, the SSI (server-side include) module uses a filter to scan the contents of the returned document, and then replaces "include" directives with the contents of the specified URLs.</p>
+<p>Подзапросы наиболее полезны для вставки дополнительного контента <em>основанного на данных из первоначального ответа</em>. Subrequests are most useful for inserting additional content <em>based on data from the original response</em>. For example, the SSI (server-side include) module uses a filter to scan the contents of the returned document, and then replaces "include" directives with the contents of the specified URLs.</p>
 
 <p>We'll start with a simpler example. We'll make a filter that treats the entire contents of a document as a URL to be retrieved, and then appends the new document to the URL itself. Remember that the URL must be a location in nginx.conf.</p>
 

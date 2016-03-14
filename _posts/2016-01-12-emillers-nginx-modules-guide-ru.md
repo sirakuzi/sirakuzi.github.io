@@ -18,7 +18,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide.html">Emiller's Guide To Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a>
 <br>Неполный перевод: <a href="http://sirakuzi.github.io/">sirakuzi</a> на основе перевода <a href="http://kung-fu-tzu.ru/">Петра Леонова</a>.
-<br>Перевод в процессе, последнее обновление 18 января 2016 г.
+<br>Перевод в процессе, последнее обновление 20 февраля 2016 г.
 <br>Первая публикация: 28 апреля 2007 г. (Последнее изменение от 16 января 2013 г. &ndash; <a href="#changes">изменения</a>)</p></small>
 </section>
 
@@ -623,10 +623,10 @@ typedef stuct {
 <a name="proxying"></a>
 <h3>3.2. Устроство Обработчиков Upstream (так же известных как Прокси)</h3>
 
-<p>Я уже немного объяснил на пальцах как вашему обработчику сформировать ответ. Иногда у вас будет возможность получить готовый ответ только при помощи куска C кода, но случается что нужно взаимодействовать с другим сервером (например если вы пишите модуль для реализации взаимодействия с другим сетевым протоколом). Вы <em>можете</em> выполнить все сетевое программирование самостоятельно, но что если вы получаете частичный ответ? Вы не захотите блокировать      You don't want to block the primary event loop with your own event loop while you're waiting for the rest of the response. You'd kill the Nginx's performance. Fortunately, Nginx lets you hook right into its own mechanisms for dealing with back-end servers (called "upstreams"), so your module can talk to another server without getting in the way of other requests. This section describes how a module talks to an upstream, such as Memcached, FastCGI, or another HTTP server.</p>
+<p>Я уже немного пояснил как вашему обработчику сформировать ответ. Иногда у вас будет возможность получить готовый ответ только при помощи куска C кода, но случается так, что нужно взаимодействовать с другим сервером (например при написании модуля для взаимодействия с другим сетевым протоколом). Вы <em>можете</em> выполнить все сетевое программирование самостоятельно, но что делать если вы получаете частичный ответ? Вам же не захочется блокировать основной цикл событий вашим собственным циклом пока вы ожидаете остальную часть ответа. Так вы просадите всю производительность Nginx'а. К счастью, Nginx позволяет вам подключиться к своим внутренним механизмам взаимодействия с бэкэнд серверами (называемыми "upstream"), так что ваш модуль может общаться с другим сервером не мешая другим запросам. В этом разделе поясняется как происходит общение модуля с апстримом, таким как Memcached, FastCGI, или же другим HTTP сервером.</p>
 
 <a name="proxying-summary"></a>
-<h4>3.2.1. Summary of upstream callbacks</h4>
+<h4>3.2.1. Основные свойства upstream вызовов</h4>
 
 <p>Unlike the handler function for other modules, the handler function of an upstream module does little "real work". It does <em>not</em> call <code>ngx_http_output_filter</code>. It merely sets callbacks that will be invoked when the upstream server is ready to be written to and read from. There are actually 6 available hooks:</p>
 
