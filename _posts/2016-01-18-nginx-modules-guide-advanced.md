@@ -67,12 +67,12 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <section>
 <a name="shm-foreword"></a>
-<h3>1.1. Введение-предупреждение</h3>
+<h3>1.1. Введение - предупреждение</h3>
 <p>Во-первых, пользуйтесь на свой страх и риск. Этот гайд был написан через несколько месяцев после опыта работы с общей памятью в Nginx и хоть я и пытаюсь быть предельно точным (и я потратил какое-то время чтобы освежить свою память), но ни в коей мере это не гарантируется. Вы предупреждены.</p>
 
 <p>Кроме того, 100% этих знаний были почерпаны из чтения исходного кода и обратного инжиниринга основных процессов, так что вероятно есть лучшие способы сделать описанные тут вещи.</p>
 
-<p>А, и это руковозство основано на версии 0.6.31, тем не менее версия насколько я знаю 0.5.x совместима на 100%, и 0.7.x так же не должен вносить каких-либо изменений влияющих на совместимость.</p>
+<p>А, и это руководство основано на версии 0.6.31, тем не менее версия насколько я знаю 0.5.x совместима на 100%, и 0.7.x так же не должен вносить каких-либо изменений влияющих на совместимость.</p>
 
 <p>В качестве реального примера использования общей памяти в Nginx см. <a href="http://github.com/gnosek/nginx-upstream-fair/tree/master">модуль upstream_fair</a>.</p>
 
@@ -85,15 +85,15 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <p>
 Чтобы создать сегмент общей памяти в Nginx вам потребуется:
 <ul>
-<li>provide a constructor function to initialise the segment</li>
+<li>предоставить функцию-конструктор для инициализации сегмента</li>
 
-<li>call <code>ngx_shared_memory_add</code></li>
+<li>вызвать <code>ngx_shared_memory_add</code></li>
 </ul>
 </p>
 
 
 <p>
-These two points contain the main gotchas (that I came across), namely:
+Эти два пункта содержат основные подводные камни (на которые я наткнулся), а именно:
 <section><ol>
 <li><p>Your constructor will be called multiple times and it's up to you to find out whether you're called the first time (and should set something up), or not (and should probably leave everything alone). The prototype for the shared memory constructor looks like:
 <pre>
