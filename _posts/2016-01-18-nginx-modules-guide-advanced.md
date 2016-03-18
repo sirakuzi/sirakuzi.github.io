@@ -18,7 +18,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <small><p>Оригинал: <a href="http://www.evanmiller.org/nginx-modules-guide-advanced.html">Emiller's Advanced Topics In Nginx Module Development</a>.
 <br>Автор: <a href="http://www.evanmiller.org/">Эван Миллер</a> (в соавторстве с <a href="http://nginx.localdomain.pl/">Гжегожем Носеком (Grzegorz Nosek)</a>)
 <br>Неполный перевод: <a href="http://sirakuzi.github.io/">sirakuzi</a>.
-<br>Перевод в процессе, последнее обновление 28 января 2016 г.
+<br>Перевод в процессе, последнее обновление 18 марта 2016 г.
 <br>Черновик от 13 августа 2009 г.</p></small>
 </section>
 
@@ -62,28 +62,28 @@ div.figure img { display: block; margin: 0 auto 1em; }
 
 <p><em>Глава написана <a href="http://localdomain.pl/">Гжегожем Носеком</a></em></p>
 
-<p>Nginx, while being unthreaded, allows worker processes to share memory between them. However, this is quite different from the standard pool allocator as the shared segment has fixed size and cannot be resized without restarting nginx or destroying its contents in another way.</p>
+<p>Nginx, будучи без поддержки потоков, позволяет рабочим процессам иметь общую память. Однако, это сильно отличается от распределителя пула памяти к которому мы привыкли, т.к. у разделяемого сегмента размер фиксирован и не может быть изменен без перезагрузки Nginx'а или же без уничтожения всех содержащихся там данных.</p>
 </section>
 
 <section>
 <a name="shm-foreword"></a>
-<h3>1.1. A (fore)word of caution</h3>
-<p>First of all, caveat hacker. This guide has been written several months after hands-on experience with shared memory in nginx and while I try my best to be accurate (and have spent some time refreshing my memory), in no way is it guaranteed. You've been warned.</p>
+<h3>1.1. Введение-предупреждение</h3>
+<p>Во-первых, пользуйтесь на свой страх и риск. Этот гайд был написан через несколько месяцев после опыта работы с общей памятью в Nginx и хоть я и пытаюсь быть предельно точным (и я потратил какое-то время чтобы освежить свою память), но ни в коей мере это не гарантируется. Вы предупреждены.</p>
 
-<p>Also, 100% of this knowledge comes from reading the source and reverse-engineering the core concepts, so there are probably better ways to do most of the stuff described.</p>
+<p>Кроме того, 100% этих знаний были почерпаны из чтения исходного кода и обратного инжиниринга основных процессов, так что вероятно есть лучшие способы сделать описанные тут вещи.</p>
 
-<p>Oh, and this guide is based on 0.6.31, though 0.5.x is 100% compatible AFAIK and 0.7.x also brings no compatibility-breaking changes that I know of.</p>
+<p>А, и это руковозство основано на версии 0.6.31, тем не менее версия насколько я знаю 0.5.x совместима на 100%, и 0.7.x так же не должен вносить каких-либо изменений влияющих на совместимость.</p>
 
-<p>For real-world usage of shared memory in nginx, see my <a href="http://github.com/gnosek/nginx-upstream-fair/tree/master">upstream_fair module</a>.</p>
+<p>В качестве реального примера использования общей памяти в Nginx см. <a href="http://github.com/gnosek/nginx-upstream-fair/tree/master">модуль upstream_fair</a>.</p>
 
-<p>This probably does not work on Windows at all. Core dumps in the rear mirror are closer than they appear.</p>
+<p>Всё это скорее всего совсем не будет работать на Windows. Дампы памяти в зеркале заднего вида ближе чем они кажутся.</p>
 </section>
 
 <section>
 <a name="shm-creating"></a>
-<h3>1.2. Creating and using a shared memory segment</h3>
+<h3>1.2. Создание и использование сегмента общей памяти</h3>
 <p>
-To create a shared memory segment in nginx, you need to:
+Чтобы создать сегмент общей памяти в Nginx вам потребуется:
 <ul>
 <li>provide a constructor function to initialise the segment</li>
 
