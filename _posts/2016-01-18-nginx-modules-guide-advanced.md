@@ -31,8 +31,8 @@ div.figure img { display: block; margin: 0 auto 1em; }
     <ol>
         <li><a href="#shm">Общая память</a></li>
         <ol>
-            <li><a href="#shm-foreword">A (fore)word of caution</a></li>
-            <li><a href="#shm-creating">Creating and using a shared memory segment</a></li>
+            <li><a href="#shm-foreword">Введение - предупреждение</a></li>
+            <li><a href="#shm-creating">Создание и использование сегмента общей памяти</a></li>
             <li><a href="#shm-slab">Using the slab allocator</a></li>
             <li><a href="#shm-spinlocks">Spinlocks, atomic memory access</a></li>
             <li><a href="#shm-rbtrees">Using rbtrees</a></li>
@@ -95,7 +95,7 @@ div.figure img { display: block; margin: 0 auto 1em; }
 <p>
 Эти два пункта содержат основные подводные камни (на которые я наткнулся), а именно:
 <section><ol>
-<li><p>Your constructor will be called multiple times and it's up to you to find out whether you're called the first time (and should set something up), or not (and should probably leave everything alone). The prototype for the shared memory constructor looks like:
+<li><p>Ваш конструктор будет вызываться несколько раз и вы должны выяснить - или же вы   Your constructor will be called multiple times and it's up to you to find out whether you're called the first time (and should set something up), or not (and should probably leave everything alone). The prototype for the shared memory constructor looks like:
 <pre>
 static ngx_int_t init(ngx_shm_zone_t *shm_zone, void *data);
 </pre>
